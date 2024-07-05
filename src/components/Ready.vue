@@ -6,10 +6,12 @@
       <div v-if="response">
         <p>응답: {{ response }}</p>
       </div>
-
-  
-      <h1>ID Token</h1>
-      <button @click="fetchUserIdToken">ID Token 받아오기</button>
+      <h1>유튜브 프로필 받아오기!!!</h1>
+      <button @click="fetchYoutubeData">유튜브 프로필 데이터 받아오기</button>
+      <div>
+      </div>
+      <h1>Access Token 받아오기</h1>
+      <button @click="fetchUserAccessToken">엑서스 토큰 받아오기</button>
       <div>
         <!-- <p>ID Token: {{ IDToken }}</p> -->
       </div>
@@ -58,7 +60,7 @@
           console.error('Firebase Functions 호출 중 오류 발생:', error);
         }
       },
-      fetchUserIdToken() {
+      async fetchUserIdToken() {
         // Initialize Firebase Auth
         const auth = getAuth();
   
@@ -83,6 +85,9 @@
           console.log('No user signed in.');
           return Promise.resolve(null); // Return a resolved promise with null value
         }
+      },
+      async fetchYoutubeData() {
+        this.$store.dispatch("getYouTubeData");
       },
 
       async getUID() {

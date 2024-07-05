@@ -8,7 +8,17 @@ import Ready from './components/Ready.vue';
 import { createStore } from 'vuex';
 import firebaseApp from './scripts/firebaseApp.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore'; // Firestore 모듈 가져오기
+import {
+  getFunctions,
+  httpsCallable,
+  connectFunctionsEmulator,
+} from 'firebase/functions';
 
+
+
+const db = getFirestore();
+const functions = getFunctions();
 
 const routes = [
   { path: '/', component: SignIn },
@@ -41,7 +51,7 @@ const store = createStore( {
               }
             });
         },
-        signInWithGoogleAndUpdateUserState(){
+        async signInWithGoogleAndUpdateUserState(){
         const auth = getAuth(firebaseApp);
   
         // GoogleAuthProvider 객체 생성 및 Scope 설정
@@ -53,12 +63,22 @@ const store = createStore( {
   
         // Google 로그인 팝업 열기
         signInWithPopup(auth, provider)
-          .then((result) => {
-            // const credential = GoogleAuthProvider.credentialFromResult(result);
+          .then(async (result) => {
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            const accessToken = credential.accessToken;
+            const refreshToken = result.user.stsTokenManager.refreshToken;
+
+            console.log("accessToken");
+            console.log(accessToken);
+            console.log("refreshToken" + refreshToken);
             // this.$store.commit('updateUserState', result.user);
             const user = result.user;
-            //          const googleAccessToken = await user.getIdToken();
-  
+            await setDoc(doc(db, 'users', user.uid), {
+              accessToken: accessToken,
+              refreshToken: refreshToken,
+              tokenExpiry: Date.now() + 3600 * 1000
+            }, { merge: true});
+            
             console.log('Logged in user:', user);
             // this.$router.push('/ready');
           })
@@ -68,7 +88,25 @@ const store = createStore( {
             const errorMessage = error.message;
             console.error('Google login error:', errorCode, errorMessage);
           });
-        }
+        },
+        async getYouTubeData() {
+          try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+    
+            if (user) {
+              const idToken = await user.getIdToken(true); // ID 토큰 갱신
+              const getYouTubeDataCallable = httpsCallable(functions, 'getYouTubeData');
+              const result = await getYouTubeDataCallable({ idToken });
+              console.log(result.data);
+              this.response = result.data;
+            } else {
+              console.log('User is not authenticated.');
+            }
+          } catch (error) {
+            console.error('Firebase Functions 호출 중 오류 발생:', error);
+          }
+        },
     },
     getters : {
         getUserState() {
