@@ -18,9 +18,9 @@
 # [ ] Cloud FireStore Read/Write 권한 보안 규칙 수정할 것!!@!!!!
 
 # 구현 순서
-- [ ] ReadyView
-    - [ ] dive 기간 설정할 수 있는 UI 설계
-    - [ ] 한 dive를 만들수 있는 로직 설계
+- [x] ReadyView
+    - [x] dive 기간 설정할 수 있는 UI 설계
+    - [x] 한 dive를 만들수 있는 로직 설계
 - [ ] SearchView : 사용자의 
     - [ ] 구독 목록 받기
     - [ ] 유저가 요청할 때 추가적인 구독 목록을 받는 기능 구현
@@ -73,12 +73,13 @@
 - [x] 사용자가 날짜와 시간을 선택하는 요소와 string을 작성하는 요소는 서로 순서대로 나타나야 함.
 - [x] string을 작성하는 요소에서 날짜와 시간을 선택하는 요소로 접근해 날짜와 시간을 재설정할 수 있어야 함.
 
+### SearchView
+- dive 동안 유튜브 영상을 선택해 재생목록에 담을 수 있는 UI를 제공하는 클래스
+
 ### SignInView
 - 사용자가 로그인 기능을 사용하도록 돕는 클래스
 ### DashBoardView
 - 현재 유튜브 통제 진행 상황을 보여주는 클래스
-### ReadyView
-- 새 dive 전 dive의 목표 설정을 입력할 수 있는 UI를 제공하는 클래스 
 ### SelectView
 - dive가 끝났을 때 시청할 유튜브 영상을 선택하는 UI를 제공하는 클래스
 ### SearchView
