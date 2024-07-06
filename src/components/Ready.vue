@@ -12,6 +12,11 @@
         <label for="time">시간 선택:</label>
         <input type="time" v-model="selectedTime" id="time" class="input">
       </div>
+
+      <div class="input-group">
+        <label for="watchTime">유튜브 시청 시간 (시간 단위):</label>
+        <input type="number" v-model="watchTime" id="watchTime" class="input" min="1" placeholder="시청 시간">
+      </div>
       
       <button @click="nextStep" class="button">다음</button>
     </div>
@@ -20,6 +25,7 @@
       <p>날짜와 시간을 다시 선택하시려면 <a @click="previousStep" href="#" class="link">여기</a>를 클릭하세요.</p>
       
       <p>다음 문장을 입력하세요:</p>
+      <p class="target-string">"나는 {{ formattedDate }} {{ formattedTime }}부터 {{ watchTime }}시간 동안 볼 때까지 쾌락을 위한 유튜브 영상을 시청하지 않겠습니다."</p>
       
       <div class="input-feedback">
         <span v-for="(char, index) in targetString" :key="index" :class="getCharClass(index)">
@@ -36,7 +42,7 @@
 
 <script>
 import { getAuth } from "firebase/auth";
-import { doc, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, collection, addDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import router from "../router";
 
@@ -46,6 +52,7 @@ export default {
       step: 1,
       selectedDate: "",
       selectedTime: "",
+      watchTime: 1, // default watch time
       userString: "",
       isStringMatched: false,
     };
@@ -58,15 +65,15 @@ export default {
       return this.selectedTime;
     },
     targetString() {
-      return `나는 ${this.formattedDate} ${this.formattedTime} 까지 쾌락을 위한 유튜브 영상을 시청하지 않겠습니다.`;
+      return `나는 ${this.formattedDate} ${this.formattedTime}부터 ${this.watchTime}시간 동안 볼 때까지 쾌락을 위한 유튜브 영상을 시청하지 않겠습니다.`;
     }
   },
   methods: {
     nextStep() {
-      if (this.selectedDate && this.selectedTime) {
+      if (this.selectedDate && this.selectedTime && this.watchTime) {
         this.step = 2;
       } else {
-        alert("날짜와 시간을 선택해주세요.");
+        alert("날짜, 시간을 선택하고 시청 시간을 입력해주세요.");
       }
     },
     previousStep() {
@@ -95,14 +102,21 @@ export default {
           const db = getFirestore();
           const userRef = doc(db, "users", user.uid);
           const divesRef = collection(userRef, "dives");
-          await addDoc(divesRef, {
+          const diveDoc = await addDoc(divesRef, {
             createdAt: serverTimestamp(),
             endDate: this.selectedDate,
             endTime: this.selectedTime,
+            watchTime: this.watchTime,
             watchTimeAfterDive: 0,
             videos: [],
             finalVideos: []
           });
+
+          // 사용자 문서에 currentDiveRef 업데이트
+          await updateDoc(userRef, {
+            currentDiveRef: diveDoc
+          });
+
           alert("Dive 설정이 완료되었습니다.");
           router.push("/ready");
         } else {
