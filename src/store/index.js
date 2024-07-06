@@ -30,8 +30,8 @@ const store = createStore({
             onAuthStateChanged(auth, (user) => {
               if (user) {
                 commit('setUser', user);
-                // router.push('/ready');
-                router.push('/console');
+                router.push('/ready');
+                // router.push('/console');
               } else {
                 commit('setUser', null);
                 router.push('/');

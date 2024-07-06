@@ -65,6 +65,14 @@
 
 
 ## View 구현
+### ReadyView 기능 명세
+- [x] 사용자가 날짜와 시간을 선택할 수 있어야 함.
+- [x] 사용자가 선택한 날짜와 시간을 이용해서 다음과 같은 string을 만듦 : "나는 (사용자가 선택한 날짜) (사용자가 선택한 시간) 까지 쾌락을 위한 유튜브 영상을 시청하지 않겠습니다."
+- [x] 사용자의 입력을 받는 string과 비교해서 두 string이 같은지 피드백. 즉 사용자는 설정한 문장과 같은 문장을 따라치도록 유도당해야 함.
+- [x] 두 string이 같을 때 button을 활성화. 해당 버튼은 firestore에 새로운 dives collection에 문서(doc)를 만듦.
+- [x] 사용자가 날짜와 시간을 선택하는 요소와 string을 작성하는 요소는 서로 순서대로 나타나야 함.
+- [x] string을 작성하는 요소에서 날짜와 시간을 선택하는 요소로 접근해 날짜와 시간을 재설정할 수 있어야 함.
+
 ### SignInView
 - 사용자가 로그인 기능을 사용하도록 돕는 클래스
 ### DashBoardView
@@ -105,7 +113,7 @@
         - current dive를 가리키는 포인터 currentDiveDocRef
         - dives/
             - doc 생성
-                - 생성 날짜, dive 기간, dive 이후 youtube 시청 시간
+                - 생성 날짜, dive 기간, dive 이후 youtube 시청 시간, 성공 여부(진행 중, 성공, 실패)
                 - videos/
                     - video 정보를 담은 docs...
                     - Tumbnail image url, title, channel info, 
