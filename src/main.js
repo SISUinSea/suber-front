@@ -107,6 +107,26 @@ const store = createStore( {
             console.error('Firebase Functions 호출 중 오류 발생:', error);
           }
         },
+
+        async getSubscribedChannelList() {
+          try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+    
+            if (user) {
+              const idToken = await user.getIdToken(true); // ID 토큰 갱신
+              const getSubscribedChannelListCallable = httpsCallable(functions, 'getSubscribedChannels');
+              const result = await getSubscribedChannelListCallable({ idToken });
+              console.log(result.data);
+              this.response = result.data;
+            } else {
+              console.log('User is not authenticated.');
+            }
+          } catch (error) {
+            console.error('In function ::getSubscribedChannelList::, Firebase Functions 호출 중 오류 발생:', error);
+          }
+        },
+        
     },
     getters : {
         getUserState() {

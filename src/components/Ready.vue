@@ -9,17 +9,19 @@
       <h1>유튜브 프로필 받아오기!!!</h1>
       <button @click="fetchYoutubeData">유튜브 프로필 데이터 받아오기</button>
       <div>
-      </div>
-      <h1>Access Token 받아오기</h1>
-      <button @click="fetchUserAccessToken">엑서스 토큰 받아오기</button>
-      <div>
-        <!-- <p>ID Token: {{ IDToken }}</p> -->
+        <h1>유저 구독 목록</h1>
+        <button @click="fetchSubscribedChannelList">유저 구독 목록 받아오기</button>
       </div>
 
-      <h1>get UID</h1>
-      <button @click="getUID">Execute!</button>
       <div>
-        <!-- <p>ID Token: {{ IDToken }}</p> -->
+        <h1>특정 채널의 동영상을 반환</h1>
+        <button >유저 구독 목록 받아오기</button>
+      </div>
+      
+
+      <div>
+        <h1>플레이리스트 만들기!</h1>
+        <button @click="createPlaylist">플레이리스트 만들기</button>
       </div>
     </div>
   </template>
@@ -34,6 +36,7 @@
 
   import firebaseApp from '../scripts/firebaseApp.js';
   import { getApp } from 'firebase/app';
+import { mapActions } from 'vuex';
   
   // connect with local server
   // const functions = getFunctions(getApp());
@@ -46,9 +49,28 @@
       return {
         response: null,
         IDToken: '',
+        playlistTitle: '2024 07 06 sisu!',
       };
     },
     methods: {
+      async createPlaylist() {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+
+        if (user) {
+          const idToken = await user.getIdToken(true);
+          const createYoutubePlaylistCallable = httpsCallable(functions, 'createYoutubePlaylist');
+          const result = await createYoutubePlaylistCallable({ idToken, playlistTitle: this.playlistTitle });
+          console.log('Playlist created:', result.data);
+        } else {
+          console.log('User is not authenticated.');
+        }
+      } catch (error) {
+        console.error('Error creating playlist:', error);
+      }
+    },
+      // ...mapActions
       async callFunction() {
         try {
           const helloWorldCallable = httpsCallable(functions, 'helloworld');
@@ -59,6 +81,9 @@
         } catch (error) {
           console.error('Firebase Functions 호출 중 오류 발생:', error);
         }
+      },
+      async fetchSubscribedChannelList() {
+        this.$store.dispatch('getSubscribedChannelList');
       },
       async fetchUserIdToken() {
         // Initialize Firebase Auth
@@ -86,6 +111,7 @@
           return Promise.resolve(null); // Return a resolved promise with null value
         }
       },
+      
       async fetchYoutubeData() {
         this.$store.dispatch("getYouTubeData");
       },
