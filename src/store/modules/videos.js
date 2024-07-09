@@ -46,6 +46,7 @@ const actions = {
           id: video.id.videoId,
           title: video.snippet.title,
           thumbnail: video.snippet.thumbnails.default.url,
+          thumbnail_high: video.snippet.thumbnails.high.url,
         }));
 
         if (pageToken) {
