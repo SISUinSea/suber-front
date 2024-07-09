@@ -118,7 +118,7 @@ export default {
           });
 
           alert("Dive 설정이 완료되었습니다.");
-          router.push("/ready");
+          router.push("/search");
         } else {
           alert("로그인이 필요합니다.");
         }

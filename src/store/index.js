@@ -14,6 +14,9 @@ const store = createStore({
         return {
             user: null,
             response: null,
+            channels : [],
+            nextPageToken: null,
+            videos:[],
         };
     },
     mutations: {
@@ -22,7 +25,22 @@ const store = createStore({
         },
         setResponse(state, response) {
             state.response = response;
-        }
+        },
+        setChannels(state, channels) {
+            state.channels = channels;
+        },
+        addChannels(state, channels) {
+            state.channels = [...state.channels, ...channels];
+        },
+        setNextPageToken(state, token) {
+            state.nextPageToken = token;
+        },
+        setVideos(state, videos) {
+            state.videos = videos;
+        },
+        addVideos(state, videos) {
+            state.videos = [...state.videos, ...videos];
+        },
     },
     actions: {
         initAuthState({ commit }) {
@@ -77,23 +95,98 @@ const store = createStore({
                 console.error('Firebase Functions 호출 중 오류 발생:', error);
             }
         },
-        async getSubscribedChannelList({ commit }) {
-            try {
-                const auth = getAuth();
-                const user = auth.currentUser;
-                if (user) {
-                    const idToken = await user.getIdToken(true);
-                    const getSubscribedChannelListCallable = httpsCallable(functions, 'getSubscribedChannels');
-                    const result = await getSubscribedChannelListCallable({ idToken });
-                    // commit('setResponse', result.data);
-                    console.log(result);
-                } else {
-                    console.log('User is not authenticated.');
+        async getSubscribedChannelList({ commit, state }, pageToken = '') {
+            const functions = getFunctions();
+            const auth = getAuth();
+            const user = auth.currentUser;
+          
+            if (user) {
+              try {
+                const idToken = await user.getIdToken(true);
+                console.log('Obtained ID token:', idToken); // 로그 추가
+          
+                const getSubscribedChannels = httpsCallable(functions, 'getSubscribedChannels');
+                const result = await getSubscribedChannels({ idToken:idToken, pageToken:pageToken });
+          
+                // 전체 응답 데이터 구조를 로그로 출력하여 확인
+                console.log('getSubscribedChannels result:', result);
+          
+                // 응답 데이터의 정확성을 체크
+                if (!result.data || !result.data.data || !result.data.data.items) {
+                  console.error('Invalid response structure:', result.data);
+                  throw new Error('Invalid response from getSubscribedChannels');
                 }
-            } catch (error) {
-                console.error('Firebase Functions 호출 중 오류 발생:', error);
+          
+                const items = result.data.data.items; // 실제 항목 리스트
+          
+                const channels = items.map(channel => ({
+                  id: channel.snippet.resourceId.channelId,
+                  thumbnail: channel.snippet.thumbnails.default.url,
+                  title: channel.snippet.title,
+                }));
+          
+                if (pageToken) {
+                  commit('addChannels', channels);
+                } else {
+                  commit('setChannels', channels);
+                }
+          
+                commit('setNextPageToken', result.data.data.nextPageToken);
+          
+                return state.channels;
+              } catch (error) {
+                console.error('Error fetching subscribed channels:', error);
+                throw error;
+              }
             }
-        }
+          },
+          async getChannelVideos({ commit, state }, { channelId, pageToken = '' }) {
+            const functions = getFunctions();
+            const auth = getAuth();
+            const user = auth.currentUser;
+
+            if (user) {
+                try {
+                    const idToken = await user.getIdToken(true);
+                    console.log('Obtained ID token:', idToken); // 로그 추가
+
+                    const getChannelVideos = httpsCallable(functions, 'getChannelVideos');
+                    const result = await getChannelVideos({ idToken, channelId, pageToken });
+
+                    // 전체 응답 데이터 구조를 로그로 출력하여 확인
+                    console.log('getChannelVideos result:', result);
+
+                    // 응답 데이터의 정확성을 체크
+                    if (!result.data || !result.data.data || !result.data.data.items) {
+                        console.error('Invalid response structure:', result.data);
+                        throw new Error('Invalid response from getChannelVideos');
+                    }
+
+                    const items = result.data.data.items; // 실제 항목 리스트
+
+                    const videos = items.map(video => ({
+                        id: video.id.videoId,
+                        title: video.snippet.title,
+                        thumbnail: video.snippet.thumbnails.default.url,
+                    }));
+
+                    if (pageToken) {
+                        commit('addVideos', videos);
+                    } else {
+                        commit('setVideos', videos);
+                    }
+
+                    commit('setNextPageToken', result.data.data.nextPageToken);
+
+                    return state.videos;
+                } catch (error) {
+                    console.error('Error fetching channel videos:', error);
+                    throw error;
+                }
+            }
+        },
+          
+      
     },
     getters: {
         getUserState(state) {
@@ -104,7 +197,19 @@ const store = createStore({
         },
         getResponse(state) {
             return state.response;
-        }
+        },
+        getChannels(state) {
+            return state.channels;
+        },
+        getNextPageToken(state) {
+            return state.nextPageToken;
+        },
+        getNextPageToken(state) {
+            return state.nextPageToken;
+        },
+        getVideos(state) {
+            return state.videos;
+        },
     }
 });
 
