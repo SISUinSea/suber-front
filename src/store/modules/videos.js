@@ -1,13 +1,15 @@
-// src/store/modules/videos.js
 import { getAuth } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { doc, setDoc, getFirestore, getDoc, collection } from 'firebase/firestore';
 import firebaseApp from '@/scripts/firebaseApp';
 
 const functions = getFunctions(firebaseApp);
+const db = getFirestore(firebaseApp);
 
 const state = () => ({
   videos: [],
   videoNextPageToken: null,
+  feedbackMessages: {},
 });
 
 const mutations = {
@@ -19,6 +21,19 @@ const mutations = {
   },
   setVideoNextPageToken(state, token) {
     state.videoNextPageToken = token;
+  },
+  removeVideo(state, videoId) {
+    state.videos = state.videos.filter(video => video.id !== videoId);
+  },
+  setFeedbackMessage(state, { videoId, message }) {
+    state.feedbackMessages = {
+      ...state.feedbackMessages,
+      [videoId]: message,
+    };
+  },
+  clearFeedbackMessage(state, videoId) {
+    const { [videoId]: _, ...remainingMessages } = state.feedbackMessages;
+    state.feedbackMessages = remainingMessages;
   },
 };
 
@@ -46,7 +61,7 @@ const actions = {
           id: video.id.videoId,
           title: video.snippet.title,
           thumbnail: video.snippet.thumbnails.default.url,
-          thumbnail_high: video.snippet.thumbnails.high.url,
+          thumbnailHigh: video.snippet.thumbnails.high.url,
         }));
 
         if (pageToken) {
@@ -64,6 +79,46 @@ const actions = {
       }
     }
   },
+  async saveVideoToDive({ commit }, video) {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (user) {
+      try {
+        const userDoc = doc(db, 'users', user.uid);
+        const userDocSnapshot = await getDoc(userDoc);
+
+        if (!userDocSnapshot.exists()) {
+          throw new Error('User document does not exist');
+        }
+
+        const currentDiveRef = userDocSnapshot.data().currentDiveRef;
+
+        if (!currentDiveRef) {
+          throw new Error('No current dive reference found');
+        }
+
+        const videoRef = doc(collection(currentDiveRef, 'videos'));
+        await setDoc(videoRef, video);
+
+        console.log('Video saved to dive:', video);
+
+        // Set feedback message
+        commit('setFeedbackMessage', { videoId: video.id, message: '저장 완료' });
+
+        // Remove the video from the list after saving
+        commit('removeVideo', video.id);
+
+        // Clear feedback message after a delay
+        setTimeout(() => {
+          commit('clearFeedbackMessage', video.id);
+        }, 3000); // 3초 후에 피드백 메시지 제거
+      } catch (error) {
+        console.error('Error saving video to dive:', error);
+        throw error;
+      }
+    }
+  },
 };
 
 const getters = {
@@ -72,6 +127,9 @@ const getters = {
   },
   getVideoNextPageToken(state) {
     return state.videoNextPageToken;
+  },
+  getFeedbackMessages(state) {
+    return state.feedbackMessages;
   },
 };
 

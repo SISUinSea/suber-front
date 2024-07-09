@@ -2,7 +2,6 @@
   <button @click="signOutFromGoogleAccount">로그아웃</button>
 
   <div class="container">
-    <h2>채널 선택</h2>
     <div class="channels-container-wrapper">
       <div class="channels-container">
         <div v-for="channel in channels" :key="channel.id" class="channel-card" @click="fetchChannelVideos(channel.id)">
@@ -12,11 +11,13 @@
         <button v-if="nextPageToken" @click="fetchChannels(nextPageToken)" class="load-more-button">&gt;</button>
       </div>
     </div>
-    <h2>채널 영상 목록</h2>
     <div class="videos-container">
-      <div v-for="video in videos" :key="video.id" class="video-card">
-        <img :src="video.thumbnail_high" class="video-thumbnail" />
+      <div v-for="video in videos" :key="video.id" class="video-card" @click="saveVideo(video)">
+        <img :src="video.thumbnail" class="video-thumbnail" />
         <p>{{ video.title }}</p>
+      </div>
+      <div v-for="(message, videoId) in feedbackMessages" :key="videoId" class="feedback-message">
+        {{ message }}
       </div>
     </div>
   </div>
@@ -27,7 +28,7 @@ import { mapGetters, mapActions } from 'vuex';
 
 export default {
   computed: {
-    ...mapGetters(['getChannels', 'getChannelNextPageToken', 'getVideos']),
+    ...mapGetters(['getChannels', 'getChannelNextPageToken', 'getVideos', 'getFeedbackMessages']),
     channels() {
       return this.getChannels;
     },
@@ -37,6 +38,9 @@ export default {
     videos() {
       return this.getVideos;
     },
+    feedbackMessages() {
+      return this.getFeedbackMessages;
+    },
   },
   data() {
     return {
@@ -44,7 +48,7 @@ export default {
     };
   },
   methods: {
-    ...mapActions(['getSubscribedChannelList', 'getChannelVideos', 'logOut']),
+    ...mapActions(['getSubscribedChannelList', 'getChannelVideos', 'saveVideoToDive', 'logOut']),
     async signOutFromGoogleAccount() {
       this.logOut();
     },
@@ -68,6 +72,13 @@ export default {
         this.loading = false;
       }
     },
+    async saveVideo(video) {
+      try {
+        await this.saveVideoToDive(video);
+      } catch (error) {
+        console.error('Error saving video:', error);
+      }
+    },
   },
   created() {
     this.fetchChannels();
@@ -80,8 +91,6 @@ export default {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
-  /* border: 1px solid #ccc; */
-  /* border-radius: 8px; */
   background-color: #f9f9f9;
 }
 
@@ -109,7 +118,6 @@ export default {
   width: 100px;
   height: 100px;
   object-fit: cover;
-  /* border-radius: 50%; */
   margin: 0 auto;
 }
 
@@ -123,6 +131,13 @@ export default {
 .channel-card p, .video-card p {
   margin-top: 10px;
   font-size: 14px;
+}
+
+.feedback-message {
+  text-align: center;
+  color: green;
+  font-weight: bold;
+  margin-top: 10px;
 }
 
 .load-more-button {
