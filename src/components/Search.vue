@@ -25,12 +25,12 @@
   
   export default {
     computed: {
-      ...mapGetters(['getChannels', 'getNextPageToken', 'getVideos']),
+      ...mapGetters(['getChannels', 'getChannelNextPageToken', 'getVideos']),
       channels() {
         return this.getChannels;
       },
       nextPageToken() {
-        return this.getNextPageToken;
+        return this.getChannelNextPageToken;
       },
       videos() {
         return this.getVideos;
