@@ -1,5 +1,6 @@
 <template>
   <button @click="signOutFromGoogleAccount">로그아웃</button>
+  <button @click="goToCart">저장된 영상 보기</button>
 
   <div class="container">
     <div class="channels-container-wrapper">
@@ -13,11 +14,9 @@
     </div>
     <div class="videos-container">
       <div v-for="video in videos" :key="video.id" class="video-card" @click="saveVideo(video)">
-        <img :src="video.thumbnail" class="video-thumbnail" />
+        <img :src="video.thumbnailHigh" class="video-thumbnail" />
         <p>{{ video.title }}</p>
-      </div>
-      <div v-for="(message, videoId) in feedbackMessages" :key="videoId" class="feedback-message">
-        {{ message }}
+        <p v-if="feedbackMessages[video.id]" class="feedback-message">{{ feedbackMessages[video.id] }}</p>
       </div>
     </div>
   </div>
@@ -52,6 +51,9 @@ export default {
     async signOutFromGoogleAccount() {
       this.logOut();
     },
+    async goToCart() {
+      this.$router.push('/cart');
+    },
     async fetchChannels(pageToken = '') {
       try {
         this.loading = true;
@@ -74,9 +76,12 @@ export default {
     },
     async saveVideo(video) {
       try {
+        this.loading = true;
         await this.saveVideoToDive(video);
       } catch (error) {
         console.error('Error saving video:', error);
+      } finally {
+        this.loading = false;
       }
     },
   },
@@ -134,10 +139,7 @@ export default {
 }
 
 .feedback-message {
-  text-align: center;
   color: green;
-  font-weight: bold;
-  margin-top: 10px;
 }
 
 .load-more-button {

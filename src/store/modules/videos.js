@@ -1,6 +1,6 @@
 import { getAuth } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { doc, setDoc, getFirestore, getDoc, collection } from 'firebase/firestore';
+import { doc, setDoc, getFirestore, getDoc, collection, query, getDocs, orderBy, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import firebaseApp from '@/scripts/firebaseApp';
 
 const functions = getFunctions(firebaseApp);
@@ -10,6 +10,7 @@ const state = () => ({
   videos: [],
   videoNextPageToken: null,
   feedbackMessages: {},
+  savedVideos: [],
 });
 
 const mutations = {
@@ -34,6 +35,12 @@ const mutations = {
   clearFeedbackMessage(state, videoId) {
     const { [videoId]: _, ...remainingMessages } = state.feedbackMessages;
     state.feedbackMessages = remainingMessages;
+  },
+  setSavedVideos(state, videos) {
+    state.savedVideos = videos;
+  },
+  removeSavedVideo(state, videoId) {
+    state.savedVideos = state.savedVideos.filter(video => video.id !== videoId);
   },
 };
 
@@ -99,7 +106,10 @@ const actions = {
         }
 
         const videoRef = doc(collection(currentDiveRef, 'videos'));
-        await setDoc(videoRef, video);
+        await setDoc(videoRef, {
+          ...video,
+          createdAt: serverTimestamp(), // 타임스탬프 필드 추가
+        });
 
         console.log('Video saved to dive:', video);
 
@@ -119,6 +129,72 @@ const actions = {
       }
     }
   },
+  async fetchSavedVideos({ commit }) {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (user) {
+      try {
+        const userDoc = doc(db, 'users', user.uid);
+        const userDocSnapshot = await getDoc(userDoc);
+
+        if (!userDocSnapshot.exists()) {
+          throw new Error('User document does not exist');
+        }
+
+        const currentDiveRef = userDocSnapshot.data().currentDiveRef;
+
+        if (!currentDiveRef) {
+          throw new Error('No current dive reference found');
+        }
+
+        const videosCollection = collection(currentDiveRef, 'videos');
+        const videosSnapshot = await getDocs(query(videosCollection, orderBy('createdAt')));
+
+        const savedVideos = videosSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        commit('setSavedVideos', savedVideos);
+      } catch (error) {
+        console.error('Error fetching saved videos:', error);
+        throw error;
+      }
+    }
+  },
+  async deleteSavedVideo({ commit }, videoId) {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (user) {
+      try {
+        const userDoc = doc(db, 'users', user.uid);
+        const userDocSnapshot = await getDoc(userDoc);
+
+        if (!userDocSnapshot.exists()) {
+          throw new Error('User document does not exist');
+        }
+
+        const currentDiveRef = userDocSnapshot.data().currentDiveRef;
+
+        if (!currentDiveRef) {
+          throw new Error('No current dive reference found');
+        }
+
+        const videoRef = doc(currentDiveRef, 'videos', videoId);
+        await deleteDoc(videoRef);
+
+        console.log('Video deleted from dive:', videoId);
+
+        // Remove the video from the list after deleting
+        commit('removeSavedVideo', videoId);
+      } catch (error) {
+        console.error('Error deleting video from dive:', error);
+        throw error;
+      }
+    }
+  },
 };
 
 const getters = {
@@ -130,6 +206,9 @@ const getters = {
   },
   getFeedbackMessages(state) {
     return state.feedbackMessages;
+  },
+  getSavedVideos(state) {
+    return state.savedVideos;
   },
 };
 
