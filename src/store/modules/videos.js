@@ -1,6 +1,6 @@
 import { getAuth } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { doc, setDoc, getFirestore, getDoc, collection, query, getDocs, orderBy, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getFirestore, getDoc, collection, getDocs, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import firebaseApp from '@/scripts/firebaseApp';
 
 const functions = getFunctions(firebaseApp);
@@ -10,7 +10,7 @@ const state = () => ({
   videos: [],
   videoNextPageToken: null,
   feedbackMessages: {},
-  savedVideos: [],
+  savedVideos: [], // 추가
 });
 
 const mutations = {
@@ -23,24 +23,14 @@ const mutations = {
   setVideoNextPageToken(state, token) {
     state.videoNextPageToken = token;
   },
+  setFeedbackMessage(state, { videoId, message }) {
+    state.feedbackMessages = { ...state.feedbackMessages, [videoId]: message };
+  },
   removeVideo(state, videoId) {
     state.videos = state.videos.filter(video => video.id !== videoId);
   },
-  setFeedbackMessage(state, { videoId, message }) {
-    state.feedbackMessages = {
-      ...state.feedbackMessages,
-      [videoId]: message,
-    };
-  },
-  clearFeedbackMessage(state, videoId) {
-    const { [videoId]: _, ...remainingMessages } = state.feedbackMessages;
-    state.feedbackMessages = remainingMessages;
-  },
-  setSavedVideos(state, videos) {
+  setSavedVideos(state, videos) { // 추가
     state.savedVideos = videos;
-  },
-  removeSavedVideo(state, videoId) {
-    state.savedVideos = state.savedVideos.filter(video => video.id !== videoId);
   },
 };
 
@@ -55,10 +45,7 @@ const actions = {
         const getChannelVideos = httpsCallable(functions, 'getChannelVideos');
         const result = await getChannelVideos({ idToken, channelId, pageToken });
 
-        console.log('getChannelVideos result:', result);
-
         if (!result.data || !result.data.data || !result.data.data.items) {
-          console.error('Invalid response structure:', result.data);
           throw new Error('Invalid response from getChannelVideos');
         }
 
@@ -68,7 +55,6 @@ const actions = {
           id: video.id.videoId,
           title: video.snippet.title,
           thumbnail: video.snippet.thumbnails.default.url,
-          thumbnailHigh: video.snippet.thumbnails.high.url,
         }));
 
         if (pageToken) {
@@ -78,7 +64,6 @@ const actions = {
         }
 
         commit('setVideoNextPageToken', result.data.data.nextPageToken);
-
         return state.videos;
       } catch (error) {
         console.error('Error fetching channel videos:', error);
@@ -86,7 +71,7 @@ const actions = {
       }
     }
   },
-  async saveVideoToDive({ commit }, video) {
+  async saveVideoToDive({ commit, state }, video) {
     const auth = getAuth();
     const user = auth.currentUser;
 
@@ -106,30 +91,23 @@ const actions = {
         }
 
         const videoRef = doc(collection(currentDiveRef, 'videos'));
-        await setDoc(videoRef, {
-          ...video,
-          createdAt: serverTimestamp(), // 타임스탬프 필드 추가
-        });
+        await setDoc(videoRef, { ...video, timestamp: serverTimestamp() });
 
-        console.log('Video saved to dive:', video);
-
-        // Set feedback message
-        commit('setFeedbackMessage', { videoId: video.id, message: '저장 완료' });
-
-        // Remove the video from the list after saving
+        commit('setFeedbackMessage', { videoId: video.id, message: 'Video saved!' });
         commit('removeVideo', video.id);
 
-        // Clear feedback message after a delay
         setTimeout(() => {
-          commit('clearFeedbackMessage', video.id);
-        }, 3000); // 3초 후에 피드백 메시지 제거
+          commit('setFeedbackMessage', { videoId: video.id, message: '' });
+        }, 3000);
+
+        console.log('Video saved to dive:', video);
       } catch (error) {
         console.error('Error saving video to dive:', error);
         throw error;
       }
     }
   },
-  async fetchSavedVideos({ commit }) {
+  async fetchSavedVideos({ commit }) { // 추가
     const auth = getAuth();
     const user = auth.currentUser;
 
@@ -148,22 +126,18 @@ const actions = {
           throw new Error('No current dive reference found');
         }
 
-        const videosCollection = collection(currentDiveRef, 'videos');
-        const videosSnapshot = await getDocs(query(videosCollection, orderBy('createdAt')));
+        const videosQuery = query(collection(currentDiveRef, 'videos'), orderBy('timestamp', 'asc'));
+        const querySnapshot = await getDocs(videosQuery);
+        const videos = querySnapshot.docs.map(doc => doc.data());
 
-        const savedVideos = videosSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-        commit('setSavedVideos', savedVideos);
+        commit('setSavedVideos', videos);
       } catch (error) {
         console.error('Error fetching saved videos:', error);
         throw error;
       }
     }
   },
-  async deleteSavedVideo({ commit }, videoId) {
+  async deleteVideoFromDive({ commit }, videoId) { // 추가
     const auth = getAuth();
     const user = auth.currentUser;
 
@@ -182,13 +156,13 @@ const actions = {
           throw new Error('No current dive reference found');
         }
 
-        const videoRef = doc(currentDiveRef, 'videos', videoId);
+        const videoRef = doc(collection(currentDiveRef, 'videos'), videoId);
         await deleteDoc(videoRef);
 
-        console.log('Video deleted from dive:', videoId);
+        const updatedVideos = state.savedVideos.filter(video => video.id !== videoId);
+        commit('setSavedVideos', updatedVideos);
 
-        // Remove the video from the list after deleting
-        commit('removeSavedVideo', videoId);
+        console.log('Video deleted from dive:', videoId);
       } catch (error) {
         console.error('Error deleting video from dive:', error);
         throw error;
@@ -207,7 +181,7 @@ const getters = {
   getFeedbackMessages(state) {
     return state.feedbackMessages;
   },
-  getSavedVideos(state) {
+  getSavedVideos(state) { // 추가
     return state.savedVideos;
   },
 };

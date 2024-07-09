@@ -18,6 +18,7 @@
         <p>{{ video.title }}</p>
         <p v-if="feedbackMessages[video.id]" class="feedback-message">{{ feedbackMessages[video.id] }}</p>
       </div>
+      <button v-if="videoNextPageToken" @click="fetchMoreVideos(videoNextPageToken)" class="load-more-button">&gt;</button>
     </div>
   </div>
 </template>
@@ -27,7 +28,7 @@ import { mapGetters, mapActions } from 'vuex';
 
 export default {
   computed: {
-    ...mapGetters(['getChannels', 'getChannelNextPageToken', 'getVideos', 'getFeedbackMessages']),
+    ...mapGetters(['getChannels', 'getChannelNextPageToken', 'getVideos', 'getFeedbackMessages', 'getVideoNextPageToken']),
     channels() {
       return this.getChannels;
     },
@@ -40,10 +41,14 @@ export default {
     feedbackMessages() {
       return this.getFeedbackMessages;
     },
+    videoNextPageToken() {
+      return this.getVideoNextPageToken;
+    },
   },
   data() {
     return {
       loading: false,
+      currentChannelId: null, // 현재 채널 ID를 저장하기 위한 변수 추가
     };
   },
   methods: {
@@ -57,21 +62,27 @@ export default {
     async fetchChannels(pageToken = '') {
       try {
         this.loading = true;
-        await this.getSubscribedChannelList();
+        await this.getSubscribedChannelList(pageToken);
       } catch (error) {
         console.error('Error fetching channels:', error);
       } finally {
         this.loading = false;
       }
     },
-    async fetchChannelVideos(channelId) {
+    async fetchChannelVideos(channelId, pageToken = '') {
       try {
         this.loading = true;
-        await this.getChannelVideos({ channelId });
+        this.currentChannelId = channelId; // 현재 채널 ID 저장
+        await this.getChannelVideos({ channelId, pageToken });
       } catch (error) {
         console.error('Error fetching channel videos:', error);
       } finally {
         this.loading = false;
+      }
+    },
+    async fetchMoreVideos(pageToken) {
+      if (this.currentChannelId) { // 현재 채널 ID가 있는지 확인
+        await this.fetchChannelVideos(this.currentChannelId, pageToken);
       }
     },
     async saveVideo(video) {

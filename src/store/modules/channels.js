@@ -1,4 +1,3 @@
-// src/store/modules/channels.js
 import { getAuth } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import firebaseApp from '@/scripts/firebaseApp';
@@ -30,15 +29,10 @@ const actions = {
     if (user) {
       try {
         const idToken = await user.getIdToken(true);
-        console.log('Obtained ID token:', idToken);
-
         const getSubscribedChannels = httpsCallable(functions, 'getSubscribedChannels');
         const result = await getSubscribedChannels({ idToken, pageToken });
 
-        console.log('getSubscribedChannels result:', result);
-
         if (!result.data || !result.data.data || !result.data.data.items) {
-          console.error('Invalid response structure:', result.data);
           throw new Error('Invalid response from getSubscribedChannels');
         }
 
@@ -57,7 +51,6 @@ const actions = {
         }
 
         commit('setChannelNextPageToken', result.data.data.nextPageToken);
-
         return state.channels;
       } catch (error) {
         console.error('Error fetching subscribed channels:', error);
