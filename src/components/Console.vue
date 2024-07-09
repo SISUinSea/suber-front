@@ -140,7 +140,6 @@ import { mapActions } from 'vuex';
         const auth = getAuth();
         signOut(auth).then(() => {
           // Sign-out successful.
-          this.$router.push('/');
 
         }).catch((error) => {
           // An error happened.

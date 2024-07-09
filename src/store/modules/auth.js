@@ -1,5 +1,5 @@
 // src/store/modules/auth.js
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
 import firebaseApp from '@/scripts/firebaseApp';
@@ -53,6 +53,17 @@ const actions = {
       console.error('Google login error:', error);
     }
   },
+  async logOut(){
+
+    const auth = getAuth();
+    signOut(auth).then(() => {
+      // Sign-out successful.
+
+    }).catch((error) => {
+      // An error happened.
+      console.log(error);
+    });
+  }
 };
 
 const getters = {

@@ -1,4 +1,6 @@
 <template>
+      <button @click="signOutFromGoogleAccount">로그아웃</button>
+
     <div class="container">
       <h2>채널 선택</h2>
       <div class="channels-container-wrapper">
@@ -42,11 +44,14 @@
       };
     },
     methods: {
-      ...mapActions(['getSubscribedChannelList', 'getChannelVideos']),
+      ...mapActions(['getSubscribedChannelList', 'getChannelVideos', 'logOut']),
+      async signOutFromGoogleAccount() {
+        this.logOut();
+      },
       async fetchChannels(pageToken = '') {
         try {
           this.loading = true;
-          await this.getSubscribedChannelList(pageToken);
+          await this.getSubscribedChannelList();
         } catch (error) {
           console.error('Error fetching channels:', error);
         } finally {

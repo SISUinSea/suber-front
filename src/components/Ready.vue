@@ -1,4 +1,5 @@
 <template>
+  <button @click="logOut">로그아웃</button>
   <div class="container">
     <h2>다이브 설정</h2>
     
@@ -45,6 +46,7 @@ import { getAuth } from "firebase/auth";
 import { doc, collection, addDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import router from "../router";
+import { mapActions } from "vuex";
 
 export default {
   data() {
@@ -69,6 +71,7 @@ export default {
     }
   },
   methods: {
+    ...mapActions(['logOut']),
     nextStep() {
       if (this.selectedDate && this.selectedTime && this.watchTime) {
         this.step = 2;

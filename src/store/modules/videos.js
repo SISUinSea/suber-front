@@ -30,8 +30,6 @@ const actions = {
     if (user) {
       try {
         const idToken = await user.getIdToken(true);
-        console.log('Obtained ID token:', idToken);
-
         const getChannelVideos = httpsCallable(functions, 'getChannelVideos');
         const result = await getChannelVideos({ idToken, channelId, pageToken });
 
