@@ -1,6 +1,6 @@
 // src/store/modules/auth.js
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
 import firebaseApp from '@/scripts/firebaseApp';
 import router from '@/router';
@@ -18,13 +18,21 @@ const mutations = {
 };
 
 const actions = {
-  initAuthState({ commit }) {
+  async initAuthState({ commit }) {
     const auth = getAuth(firebaseApp);
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
         commit('setUser', user);
-        router.push('/ready');
-        // router.push('/console');
+        
+        // Firestore에서 user의 currentDiveDocRef 확인
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDocSnapshot = await getDoc(userDocRef);
+        
+        if (userDocSnapshot.exists() && userDocSnapshot.data().currentDiveRef) {
+          router.push('/dashboard');
+        } else {
+          router.push('/ready');
+        }
       } else {
         commit('setUser', null);
         router.push('/');
@@ -49,16 +57,25 @@ const actions = {
         tokenExpiry: Date.now() + 3600 * 1000,
       }, { merge: true });
       commit('setUser', user);
+
+      // Firestore에서 user의 currentDiveDocRef 확인
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnapshot = await getDoc(userDocRef);
+      
+      if (userDocSnapshot.exists() && userDocSnapshot.data().currentDiveRef) {
+        router.push('/dashboard');
+      } else {
+        router.push('/ready');
+      }
     } catch (error) {
       console.error('Google login error:', error);
     }
   },
-  async logOut(){
-
+  async logOut() {
     const auth = getAuth();
     signOut(auth).then(() => {
       // Sign-out successful.
-
+      router.push('/');
     }).catch((error) => {
       // An error happened.
       console.log(error);

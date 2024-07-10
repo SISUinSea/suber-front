@@ -4,7 +4,7 @@ import Ready from '../components/Ready.vue';
 import Console from '../components/Console.vue';
 import Search from '../components/Search.vue';
 import Cart from '../components/Cart.vue';
-
+import DashBoard from '../components/Dashboard.vue';
 // Vue.use(Router);
 
 const routes = [
@@ -13,6 +13,8 @@ const routes = [
   { path: '/ready', component: Ready },
   { path: '/search', component: Search },
   { path: '/cart', component: Cart },
+  { path: '/dashboard', component: DashBoard },
+
 ];
 
 const router = createRouter({

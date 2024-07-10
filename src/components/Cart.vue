@@ -1,14 +1,20 @@
 <template>
-    <div class="container">
-      <button @click="goToSearch">채널 검색</button>
-      <h2>저장된 영상 목록</h2>
-      <div class="saved-videos-container">
-        <div v-for="video in savedVideos" :key="video.id" class="saved-video-card">
+    <div class="cart-container">
+        <button @click="goToDashBoard">DashBoard로 이동</button>
+      <h1>저장된 영상</h1>
+      <div v-if="videos.length === 0">
+        <p>저장된 영상이 없습니다.</p>
+      </div>
+      <div v-else class="videos-container">
+        <div v-for="video in videos" :key="video.id" class="video-card">
           <img :src="video.thumbnail" class="video-thumbnail" />
-          <p>{{ video.title }}</p>
-          <button @click="deleteVideo(video.id)">삭제</button>
+          <div class="video-info">
+            <p>{{ video.title }}</p>
+            <button @click="deleteVideo(video.id)">삭제</button>
+          </div>
         </div>
       </div>
+      <button @click="goToSearch">영상 검색하기</button>
     </div>
   </template>
   
@@ -18,80 +24,88 @@
   export default {
     computed: {
       ...mapGetters(['getSavedVideos']),
-      savedVideos() {
+      videos() {
         return this.getSavedVideos;
       },
     },
     methods: {
-      ...mapActions(['fetchSavedVideos', 'deleteSavedVideo']),
-      async goToSearch() {
-        this.$router.go(-1);
-      },
+      ...mapActions(['fetchSavedVideos', 'deleteVideoFromDive']),
       async deleteVideo(videoId) {
         try {
-          await this.deleteSavedVideo(videoId);
+          await this.deleteVideoFromDive(videoId);
         } catch (error) {
           console.error('Error deleting video:', error);
         }
       },
+      async goToSearch() {
+        this.$router.push('/search');
+      },
+      async goToDashBoard() {
+        this.$router.push('/dashboard');
+      }
     },
     async created() {
-      try {
-        await this.fetchSavedVideos();
-      } catch (error) {
-        console.error('Error fetching saved videos:', error);
-      }
+      await this.fetchSavedVideos();
     },
   };
   </script>
   
   <style scoped>
-  .container {
-    max-width: 600px;
+  .cart-container {
+    max-width: 800px;
     margin: 0 auto;
     padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
     background-color: #f9f9f9;
+    text-align: center;
   }
   
-  .saved-videos-container {
+  .videos-container {
     display: flex;
     flex-direction: column;
+    align-items: center;
   }
   
-  .saved-video-card {
+  .video-card {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    padding: 10px;
-    border-radius: 8px;
-    background-color: #fff;
+    width: 100%;
+    margin: 10px 0;
+    text-align: left;
+    box-sizing: border-box;
   }
   
   .video-thumbnail {
-    width: 80px;
-    height: 80px;
+    width: 150px;
+    height: auto;
     object-fit: cover;
-    margin-right: 10px;
     border-radius: 8px;
+    margin-right: 20px;
   }
   
-  .saved-video-card p {
-    flex: 1;
-    font-size: 14px;
+  .video-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-grow: 1;
   }
   
-  .saved-video-card button {
-    background-color: #ff4d4d;
-    color: white;
+  .video-info p {
+    margin: 0;
+  }
+  
+  button {
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
     border: none;
-    border-radius: 8px;
-    padding: 5px 10px;
+    border-radius: 4px;
     cursor: pointer;
   }
   
-  .saved-video-card button:hover {
-    background-color: #ff1a1a;
+  button:hover {
+    background-color: #ddd;
   }
   </style>
   

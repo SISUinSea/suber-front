@@ -1,6 +1,6 @@
 import { getAuth } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { doc, setDoc, getFirestore, getDoc, collection, getDocs, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getFirestore, getDoc, collection, getDocs, deleteDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import firebaseApp from '@/scripts/firebaseApp';
 
 const functions = getFunctions(firebaseApp);
@@ -137,7 +137,7 @@ const actions = {
       }
     }
   },
-  async deleteVideoFromDive({ commit }, videoId) { // 추가
+  async deleteVideoFromDive({ commit, state }, videoId) { // 수정
     const auth = getAuth();
     const user = auth.currentUser;
 

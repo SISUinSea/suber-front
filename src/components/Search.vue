@@ -14,7 +14,7 @@
     </div>
     <div class="videos-container">
       <div v-for="video in videos" :key="video.id" class="video-card" @click="saveVideo(video)">
-        <img :src="video.thumbnailHigh" class="video-thumbnail" />
+        <img :src="video.thumbnail" class="video-thumbnail" />
         <p>{{ video.title }}</p>
         <p v-if="feedbackMessages[video.id]" class="feedback-message">{{ feedbackMessages[video.id] }}</p>
       </div>
