@@ -17,11 +17,13 @@
         <img :src="video.thumbnail" class="video-thumbnail" />
         <p>{{ video.title }}</p>
         <p v-if="feedbackMessages[video.id]" class="feedback-message">{{ feedbackMessages[video.id] }}</p>
+        <span class="video-duration">{{ formatDuration(video.hours, video.minutes, video.seconds) }}</span>
       </div>
       <button v-if="videoNextPageToken" @click="fetchMoreVideos(videoNextPageToken)" class="load-more-button">&gt;</button>
     </div>
   </div>
 </template>
+
 
 <script>
 import { mapGetters, mapActions } from 'vuex';
@@ -95,12 +97,19 @@ export default {
         this.loading = false;
       }
     },
+    formatDuration(hours, minutes, seconds) {
+      if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      }
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    },
   },
   created() {
     this.fetchChannels();
   },
 };
 </script>
+
 
 <style scoped>
 .container {
@@ -128,6 +137,7 @@ export default {
   text-align: center;
   box-sizing: border-box;
   cursor: pointer;
+  position: relative; /* Add relative positioning for video duration */
 }
 
 .channel-thumbnail {
@@ -170,4 +180,17 @@ export default {
 .load-more-button:hover {
   background-color: #bbb;
 }
+
+/* Style for video duration */
+.video-duration {
+  position: absolute;
+  bottom: 8px;
+  right: 16px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
 </style>
+

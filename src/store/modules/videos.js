@@ -2,6 +2,7 @@ import { getAuth } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { doc, setDoc, getFirestore, getDoc, collection, getDocs, deleteDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import firebaseApp from '@/scripts/firebaseApp';
+import { Duration } from 'luxon';
 
 const functions = getFunctions(firebaseApp);
 const db = getFirestore(firebaseApp);
@@ -10,7 +11,7 @@ const state = () => ({
   videos: [],
   videoNextPageToken: null,
   feedbackMessages: {},
-  savedVideos: [], // 추가
+  savedVideos: [],
 });
 
 const mutations = {
@@ -29,7 +30,7 @@ const mutations = {
   removeVideo(state, videoId) {
     state.videos = state.videos.filter(video => video.id !== videoId);
   },
-  setSavedVideos(state, videos) { // 추가
+  setSavedVideos(state, videos) {
     state.savedVideos = videos;
   },
 };
@@ -51,11 +52,25 @@ const actions = {
 
         const items = result.data.data.items;
 
-        const videos = items.map(video => ({
-          id: video.id.videoId,
-          title: video.snippet.title,
-          thumbnail: video.snippet.thumbnails.default.url,
-        }));
+        console.log(items);
+
+        const videos = items.map(video => {
+          const { duration } = video.contentDetails;
+          const durationObj = Duration.fromISO(duration);
+          const hours = durationObj.hours;
+          const minutes = durationObj.minutes;
+          const seconds = durationObj.seconds;
+
+          return {
+            id: video.id,
+            // id: video.id.videoId,
+            title: video.snippet.title,
+            thumbnail: video.snippet.thumbnails.default.url,
+            hours: hours,
+            minutes: minutes,
+            seconds: seconds
+          };
+        });
 
         if (pageToken) {
           commit('addVideos', videos);
@@ -107,7 +122,7 @@ const actions = {
       }
     }
   },
-  async fetchSavedVideos({ commit }) { // 추가
+  async fetchSavedVideos({ commit }) {
     const auth = getAuth();
     const user = auth.currentUser;
 
@@ -137,7 +152,7 @@ const actions = {
       }
     }
   },
-  async deleteVideoFromDive({ commit, state }, videoId) { // 수정
+  async deleteVideoFromDive({ commit, state }, videoId) {
     const auth = getAuth();
     const user = auth.currentUser;
 
@@ -181,7 +196,7 @@ const getters = {
   getFeedbackMessages(state) {
     return state.feedbackMessages;
   },
-  getSavedVideos(state) { // 추가
+  getSavedVideos(state) {
     return state.savedVideos;
   },
 };
