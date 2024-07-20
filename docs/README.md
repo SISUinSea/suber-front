@@ -37,9 +37,7 @@
     - [x] 영상을 불러오기
     - [x] 영상의 삽입, 삭제 기능 추가
     - [ ] Cart 에 Select 기능 추가
-        - [ ] 두 개의 list(collection) 만들기 (videos, unselectedVideos)
-            - [ ] videos와 unselectedVideos 에서 동영상 요소를 주고 받을 수 있어야 함.
-            - [ ] unselectedVideos에서 동영상을 삭제할 수 있어야 함.
+
         - [ ] 설정한 시간과 영상의 총 합을 비교해주는 UI가 있어야 함
             - [ ] videos의 모든 동영상 길이의 합이 설정한 시간보다 작거나 같아야 함.
             - [ ] 설정한 시간보다 크다면 피드백
@@ -52,29 +50,16 @@
                 - 만약 시청 시간을 재설정 하지 않는다면, 마지막 영상을 unselectedVideos에 담음
             - Confirm 이후 시청시간이 지났을 때 유저에게 notification
             
-
+<!-- 
 - [ ] DashBoardView
     - [ ] 유저에게 어떤 정보를 제공할 것인가?
         - 설정한 기한으로부터 얼마나 남았는지, 진행상황, 
         - 내가 선택한 영상 Cart에 접근할 수 있어야 함.
         - 얼마나 빈번하게 들어오고 있는지, 얼마나 사용하고 있는지?
-        - Search 페이지로 넘어갈 수 있어야 함.
+        - Search 페이지로 넘어갈 수 있어야 함. -->
 
 
 
-# 
--[ ] 어떻게 firebase와 통신하는지 알아보기
-
--[x] 엑서스 토큰 얻기 대작전!
--[x] accessToken, refreshToken을 넘겨받기
--[x] 해당 정보들을 firestore에 저장!
-    - [x] 기본적인 firestore 사용법은 기록해놓기!
--[x] idToken을 넘겨주며 call functions
--[x] verifyIdToken 이후 firestore을 통해 accessToken에 접근!
--[x] refreshAccessTokenIfRequried 작성
-
-
-# FRONT TODO 
 
 ## Auth 기능 구현
  - [x] Firebase 초기화, signInWithGoogle 메소드 사용하는 버튼 만들기
