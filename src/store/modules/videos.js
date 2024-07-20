@@ -1,6 +1,6 @@
 import { getAuth } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { doc, setDoc, getFirestore, getDoc, collection, getDocs, deleteDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, addDoc, getFirestore, getDoc, collection, getDocs, deleteDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import firebaseApp from '@/scripts/firebaseApp';
 import { Duration } from 'luxon';
 
@@ -68,7 +68,8 @@ const actions = {
             thumbnail: video.snippet.thumbnails.default.url,
             hours: hours,
             minutes: minutes,
-            seconds: seconds
+            seconds: seconds,
+            selected: false,
           };
         });
 
@@ -92,21 +93,13 @@ const actions = {
 
     if (user) {
       try {
-        const userDoc = doc(db, 'users', user.uid);
-        const userDocSnapshot = await getDoc(userDoc);
+        const userDocRef = doc(db, 'users', user.uid);
 
-        if (!userDocSnapshot.exists()) {
-          throw new Error('User document does not exist');
-        }
+        const videosCollectionRef = collection(userDocRef, 'videos');
 
-        const currentDiveRef = userDocSnapshot.data().currentDiveRef;
-
-        if (!currentDiveRef) {
-          throw new Error('No current dive reference found');
-        }
-
-        const videoRef = doc(collection(currentDiveRef, 'videos'));
-        await setDoc(videoRef, { ...video, timestamp: serverTimestamp() });
+        const newVideoRef = await addDoc(videosCollectionRef, { ...video, timestamp: serverTimestamp() });
+        // const videoRef = doc(collection(currentDiveRef, 'videos'));
+        // await setDoc(videoRef, { ...video, timestamp: serverTimestamp() });
 
         commit('setFeedbackMessage', { videoId: video.id, message: 'Video saved!' });
         commit('removeVideo', video.id);
@@ -128,20 +121,20 @@ const actions = {
 
     if (user) {
       try {
-        const userDoc = doc(db, 'users', user.uid);
-        const userDocSnapshot = await getDoc(userDoc);
+        const userDocRef = doc(db, 'users', user.uid);
+        // const userDocSnapshot = await getDoc(userDoc);
 
-        if (!userDocSnapshot.exists()) {
-          throw new Error('User document does not exist');
-        }
+        // if (!userDocSnapshot.exists()) {
+        //   throw new Error('User document does not exist');
+        // }
 
-        const currentDiveRef = userDocSnapshot.data().currentDiveRef;
+        // const currentDiveRef = userDocSnapshot.data().currentDiveRef;
 
-        if (!currentDiveRef) {
-          throw new Error('No current dive reference found');
-        }
+        // if (!currentDiveRef) {
+        //   throw new Error('No current dive reference found');
+        // }
 
-        const videosQuery = query(collection(currentDiveRef, 'videos'), orderBy('timestamp', 'asc'));
+        const videosQuery = query(collection(userDocRef, 'videos'), orderBy('timestamp', 'asc'));
         const querySnapshot = await getDocs(videosQuery);
         const videos = querySnapshot.docs.map(doc => doc.data());
 
@@ -158,20 +151,20 @@ const actions = {
 
     if (user) {
       try {
-        const userDoc = doc(db, 'users', user.uid);
-        const userDocSnapshot = await getDoc(userDoc);
+        const userDocRef = doc(db, 'users', user.uid);
+        // const userDocSnapshot = await getDoc(userDoc);
 
-        if (!userDocSnapshot.exists()) {
-          throw new Error('User document does not exist');
-        }
+        // if (!userDocSnapshot.exists()) {
+        //   throw new Error('User document does not exist');
+        // }
 
-        const currentDiveRef = userDocSnapshot.data().currentDiveRef;
+        // const currentDiveRef = userDocSnapshot.data().currentDiveRef;
 
-        if (!currentDiveRef) {
-          throw new Error('No current dive reference found');
-        }
+        // if (!currentDiveRef) {
+        //   throw new Error('No current dive reference found');
+        // }
 
-        const videoRef = doc(collection(currentDiveRef, 'videos'), videoId);
+        const videoRef = doc(collection(userDocRef, 'videos'), videoId);
         await deleteDoc(videoRef);
 
         const updatedVideos = state.savedVideos.filter(video => video.id !== videoId);
