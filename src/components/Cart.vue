@@ -2,12 +2,7 @@
   <div class="cart-container">
     <button @click="goToDashBoard">DashBoard로 이동</button>
     <h1>저장된 영상</h1>
-    <div class="progress-bar-container">
-      <div class="progress-bar">
-        <div class="progress" :style="{ width: `${progressPercentage}%`, backgroundColor: progressColor }"></div>
-      </div>
-      <p>{{ totalSelectedDuration }} / {{ watchTime }} 시간</p>
-    </div>
+    
     <div v-if="videos.length === 0">
       <p>저장된 영상이 없습니다.</p>
     </div>
@@ -26,6 +21,12 @@
           <button @click="deleteVideo(video.id)">삭제</button>
         </div>
       </div>
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar">
+        <div class="progress" :style="{ width: `${progressPercentage}%`, backgroundColor: progressColor }"></div>
+      </div>
+      <p>{{ totalSelectedDuration }} / {{ watchTime }} 시간</p>
     </div>
     <button @click="goToSearch">영상 검색하기</button>
   </div>
@@ -144,7 +145,7 @@ export default {
 .progress-bar-container {
   width: 100%;
   position: sticky;
-  top: 0;
+  bottom: 0;
   background-color: #f9f9f9;
   z-index: 1000;
   padding: 10px 0;
