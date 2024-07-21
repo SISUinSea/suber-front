@@ -62,7 +62,7 @@ import { mapActions } from 'vuex';
         if (user) {
           const idToken = await user.getIdToken(true);
           const createYoutubePlaylistCallable = httpsCallable(functions, 'createYoutubePlaylist');
-          const result = await createYoutubePlaylistCallable({ idToken, playlistTitle: this.playlistTitle });
+          const result = await createYoutubePlaylistCallable({ idToken:idToken, playlistTitle: this.playlistTitle, videoIds: ["CP4DRdKDLJo", "iKfi8TvQThQ"] });
           console.log('Playlist created:', result.data);
         } else {
           console.log('User is not authenticated.');
