@@ -8,8 +8,10 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@webzlodimir/vue-bottom-sheet": "^3.0.5",
     "axios": "^1.6.8",
     "core-js": "^3.8.3",
+    "element-plus": "^2.7.7",
     "firebase": "^10.11.1",
     "luxon": "^3.4.4",
     "vue": "^3.2.13",

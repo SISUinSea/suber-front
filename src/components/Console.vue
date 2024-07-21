@@ -54,7 +54,7 @@ import { mapActions } from 'vuex';
     },
     methods: {
         ...mapActions(['getYouTubeData', 'getSubscribedChannelList',]),
-      async createPlaylist() {
+        async createPlaylist() {
       try {
         const auth = getAuth();
         const user = auth.currentUser;

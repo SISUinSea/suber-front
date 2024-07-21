@@ -105,10 +105,13 @@ export default {
           const db = getFirestore();
           const userRef = doc(db, "users", user.uid);
           const divesRef = collection(userRef, "dives");
+
+          // 종료 시각을 하나의 Date 객체로 변환
+          const endDateTime = new Date(`${this.selectedDate}T${this.selectedTime}:00`);
+
           const diveDoc = await addDoc(divesRef, {
             createdAt: serverTimestamp(),
-            endDate: this.selectedDate,
-            endTime: this.selectedTime,
+            endTime: endDateTime,
             watchTime: this.watchTime,
             watchTimeAfterDive: 0,
             videos: [],

@@ -4,6 +4,7 @@ import auth from './modules/auth';
 import channels from './modules/channels';
 import videos from './modules/videos';
 import dashboard from './modules/dashboard';
+import createPlaylist from './modules/createPlaylist';
 
 const store = createStore({
   modules: {
@@ -11,6 +12,7 @@ const store = createStore({
     channels,
     videos,
     dashboard,
+    createPlaylist,
   },
 });
 
