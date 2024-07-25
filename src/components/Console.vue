@@ -21,7 +21,7 @@
 
       <div>
         <h1>플레이리스트 만들기!</h1>
-        <button @click="createPlaylist">플레이리스트 만들기</button>
+        <button @click="test">플레이리스트 만들기</button>
       </div>
     </div>
   </template>
@@ -53,25 +53,28 @@ import { mapActions } from 'vuex';
       };
     },
     methods: {
-        ...mapActions(['getYouTubeData', 'getSubscribedChannelList',]),
-        async createPlaylist() {
-      try {
-        const auth = getAuth();
-        const user = auth.currentUser;
+        ...mapActions(['getYouTubeData', 'getSubscribedChannelList', 'createPlaylist']),
+    //     async createPlaylist() {
+    //   try {
+    //     const auth = getAuth();
+    //     const user = auth.currentUser;
 
-        if (user) {
-          const idToken = await user.getIdToken(true);
-          const createYoutubePlaylistCallable = httpsCallable(functions, 'createYoutubePlaylist');
-          const result = await createYoutubePlaylistCallable({ idToken:idToken, playlistTitle: this.playlistTitle, videoIds: ["CP4DRdKDLJo", "iKfi8TvQThQ"] });
-          console.log('Playlist created:', result.data);
-        } else {
-          console.log('User is not authenticated.');
-        }
-      } catch (error) {
-        console.error('Error creating playlist:', error);
-      }
-    },
+    //     if (user) {
+    //       const idToken = await user.getIdToken(true);
+    //       const createYoutubePlaylistCallable = httpsCallable(functions, 'createYoutubePlaylist');
+    //       const result = await createYoutubePlaylistCallable({ idToken:idToken, playlistTitle: this.playlistTitle, videoIds: ["CP4DRdKDLJo", "iKfi8TvQThQ"] });
+    //       console.log('Playlist created:', result.data);
+    //     } else {
+    //       console.log('User is not authenticated.');
+    //     }
+    //   } catch (error) {
+    //     console.error('Error creating playlist:', error);
+    //   }
+    // },
       // ...mapActions
+      async test() {
+        await this.createPlaylist({playlistTitle: 'test', videoIds: ["CP4DRdKDLJo", "iKfi8TvQThQ"]});
+      },
       async callFunction() {
         try {
           const helloWorldCallable = httpsCallable(functions, 'helloworld');

@@ -9,19 +9,14 @@ const state = () => ({
 });
 
 const mutations = {
-  setChannels(state, channels) {
-    state.channels = channels;
-  },
-  addChannels(state, channels) {
-    state.channels = [...state.channels, ...channels];
-  },
-  setChannelNextPageToken(state, token) {
-    state.channelNextPageToken = token;
-  },
+
 };
 
 const actions = {
-    async createPlaylist(playlistTitle, videoIds) {
+    async createPlaylist({commit}, {playlistTitle, videoIds}) {
+        console.log("createPlaylist");
+        console.log(playlistTitle, videoIds);
+
         try {
             const auth = getAuth();
             const user = auth.currentUser;

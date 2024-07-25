@@ -256,6 +256,7 @@ export default {
         // 3. Create YouTube playlist
         const playlistTitle = `Dive ${new Date().toISOString()}`;
         const videoIds = this.selected.map(video => video.videoId);
+        console.log(playlistTitle, videoIds);
         await this.createPlaylist(playlistTitle, videoIds);
 
         // 4. Update user document

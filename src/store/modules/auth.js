@@ -27,11 +27,12 @@ const actions = {
         // Firestore에서 user의 currentDiveDocRef 확인
         const userDocRef = doc(db, 'users', user.uid);
         const userDocSnapshot = await getDoc(userDocRef);
-        if (userDocSnapshot.exists() && userDocSnapshot.data().currentDiveRef) {
-          router.push('/cart');
-        } else {
-          router.push('/ready');
-        }
+        router.push('/console');
+        // if (userDocSnapshot.exists() && userDocSnapshot.data().currentDiveRef) {
+        //   router.push('/cart');
+        // } else {
+        //   router.push('/ready');
+        // }
       } else {
         commit('setUser', null);
         router.push('/');
