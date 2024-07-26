@@ -56,6 +56,7 @@ export default {
     return {
       watchTime: 0,
       selected: [],
+      selectedVideoIds: [],
       currentDive: null,
       diveProgress: 0,
       isDiveCompleted: false,
@@ -66,7 +67,7 @@ export default {
     videos() {
       return this.getSavedVideos.map(video => ({
         ...video,
-        selected: video.selected || false,
+        selected: this.selected.some(v => v.id === video.id),
       }));
     },
     totalSelectedDuration() {
@@ -120,18 +121,23 @@ export default {
     async deleteVideo(videoId) {
       try {
         await this.deleteVideoFromDive(videoId);
-        this.updateSelectedVideos();
+        this.selected = this.selected.filter(v => v.id !== videoId);
       } catch (error) {
         console.error('Error deleting video:', error);
       }
     },
     updateSelectedVideos(video) {
       if (video.selected) {
-        this.selected.push(video);
+        if (!this.selected.some(v => v.id === video.id)) {
+          this.selected.push(video);
+        }
       } else {
         this.selected = this.selected.filter(v => v.id !== video.id);
       }
       console.log('Selected videos:', this.selected);
+      this.selected.forEach(video => {
+        console.log(video.id);
+      });
     },
     formatDuration(hours, minutes, seconds) {
       return `${hours > 0 ? hours + ':' : ''}${minutes >= 10 ? '' : '0'}${minutes > 0 ? minutes + ':' : '0:' }${seconds}`;
@@ -224,9 +230,7 @@ export default {
 
       return `${month}-${day} ${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
     },
-    handleConfirm() {
-      console.log('Confirm button clicked');
-    },
+
     async handleConfirm() {
       if (!this.isDiveCompleted) {
         const confirmEnd = await this.$confirm('아직 다이브 종료 시각이 아니에요. 정말 다이브를 지금 종료할까요?', '다이브 종료', {
@@ -241,35 +245,38 @@ export default {
       await this.endDive();
     },
 
-    async endDive() {
-      try {
-        const auth = getAuth();
-        const user = auth.currentUser;
-        if (!user) throw new Error('User not authenticated');
+  async endDive() {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) throw new Error('User not authenticated');
 
-        // 1. Update current dive document
-        await this.updateDiveVideos();
+      // 1. Update current dive document
+      await this.updateDiveVideos();
 
-        // 2. Remove selected videos from cart
-        await this.removeSelectedVideosFromCart();
+      // 2. Remove selected videos from cart
+      await this.removeSelectedVideosFromCart();
 
-        // 3. Create YouTube playlist
-        const playlistTitle = `Dive ${new Date().toISOString()}`;
-        const videoIds = this.selected.map(video => video.videoId);
-        console.log(playlistTitle, videoIds);
-        await this.createPlaylist(playlistTitle, videoIds);
+      // 3. Create YouTube playlist
+      const playlistTitle = `Dive ${new Date().toISOString()}`;
 
-        // 4. Update user document
-        await this.updateUserDocument();
-
-        // 5. Navigate to dashboard or show completion message
-        this.$router.push('/dashboard');
-      } catch (error) {
-        console.error('Error ending dive:', error);
-        // Show error message to user
-        this.$message.error(`Failed to end dive: ${error.message}`);
+      const videoIds = this.selected.map(video => video.id);
+      if (videoIds.length === 0) {
+        throw new Error('No videos selected for the playlist');
       }
-    },
+      await this.createPlaylist({ playlistTitle, videoIds });
+
+      // 4. Update user document
+      await this.updateUserDocument();
+
+      // 5. Navigate to dashboard or show completion message
+      this.$router.push('/dashboard');
+    } catch (error) {
+      console.error('Error ending dive:', error);
+      // Show error message to user
+      this.$message.error(`Failed to end dive: ${error.message}`);
+    }
+  },  
 
     async updateDiveVideos() {
       const userDoc = await getDoc(doc(db, 'users', getAuth().currentUser.uid));
@@ -307,7 +314,7 @@ export default {
 
       // Update local state
       this.videos = this.videos.filter(v => !this.selected.some(s => s.id === v.id));
-      this.selected = [];
+      // this.selected = [];
     },
 
     async updateUserDocument() {
@@ -331,13 +338,14 @@ export default {
         await this.fetchSavedVideos();
         await this.fetchDiveDocContent();
         await this.fetchCurrentDive();
+        this.initializeSelectedVideos();
         setInterval(this.calculateDiveProgress, 1000);
       }
     },
+    initializeSelectedVideos() {
+      this.selected = this.videos.filter(video => video.selected);
+    },
   },
-
-  
-
   async created() {
     await this.initializeComponent();
   },
