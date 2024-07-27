@@ -96,10 +96,9 @@ const actions = {
         const userDocRef = doc(db, 'users', user.uid);
 
         const videosCollectionRef = collection(userDocRef, 'videos');
+        const videoDocRef = doc(videosCollectionRef, video.id);
 
-        const newVideoRef = await addDoc(videosCollectionRef, { ...video, timestamp: serverTimestamp() });
-        // const videoRef = doc(collection(currentDiveRef, 'videos'));
-        // await setDoc(videoRef, { ...video, timestamp: serverTimestamp() });
+        await setDoc(videoDocRef, { ...video, timestamp: serverTimestamp() });
 
         commit('setFeedbackMessage', { videoId: video.id, message: 'Video saved!' });
         commit('removeVideo', video.id);
