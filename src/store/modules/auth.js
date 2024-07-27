@@ -2,7 +2,7 @@
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
-import firebaseApp from '@/scripts/firebaseApp';
+import {firebaseApp} from '@/scripts/firebaseApp';
 import router from '@/router';
 
 const db = getFirestore();
