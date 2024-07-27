@@ -26,10 +26,12 @@
       <div class="progress-bar">
         <div class="progress" :style="{ width: `${progressPercentage}%`, backgroundColor: progressColor }"></div>
       </div>
-      <p>{{ totalSelectedDuration }} / {{ watchTime }} 시간</p>
+      <p>{{ totalSelectedDuration }} / {{ getCurrentDiveWatchTime }} 시간</p>
     </div>
 
-    <button 
+    <div v-if="isLoading" class="loading-spinner"></div>
+    <button
+      v-else
       class="confirm-button" 
       :style="confirmButtonStyle" 
       @click="handleConfirm"
@@ -60,10 +62,11 @@ export default {
       currentDive: null,
       diveProgress: 0,
       isDiveCompleted: false,
+      isLoading: false,
     };
   },
   computed: {
-    ...mapGetters(['getSavedVideos']),
+    ...mapGetters(['getSavedVideos', 'getCurrentDiveWatchTime']),
     videos() {
       return this.getSavedVideos.map(video => ({
         ...video,
@@ -77,11 +80,11 @@ export default {
     },
     progressPercentage() {
       const totalSelectedDuration = parseFloat(this.totalSelectedDuration);
-      return Math.min((totalSelectedDuration / this.watchTime) * 100, 100);
+      return Math.min((totalSelectedDuration / this.getCurrentDiveWatchTime) * 100, 100);
     },
     progressColor() {
       const totalSelectedDuration = parseFloat(this.totalSelectedDuration);
-      return totalSelectedDuration > this.watchTime ? 'red' : '#007BFF';
+      return totalSelectedDuration > this.getCurrentDiveWatchTime ? 'red' : '#007BFF';
     },
     confirmButtonStyle() {
       return {
@@ -117,7 +120,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(['fetchSavedVideos', 'deleteVideoFromDive', 'createPlaylist']),
+    ...mapActions(['fetchSavedVideos', 'deleteVideoFromDive', 'createPlaylist', 'fetchCurrentDiveDocument']),
     async deleteVideo(videoId) {
       try {
         await this.deleteVideoFromDive(videoId);
@@ -148,33 +151,33 @@ export default {
     async goToDashBoard() {
       this.$router.push('/dashboard');
     },
-    async fetchDiveDocContent() {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (user) {
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          const currentDiveRef = userDoc.data().currentDiveRef;
-          if (currentDiveRef && currentDiveRef instanceof Object) {
-            const diveDoc = await getDoc(currentDiveRef);
-            if (diveDoc.exists()) {
-              this.currentDive = diveDoc.data();
-              this.watchTime = diveDoc.data().watchTime || 0;
-              this.calculateDiveProgress();
-            } else {
-              console.error('Dive document does not exist.');
-            }
-          } else {
-            console.error('currentDiveRef is not a valid DocumentReference:', currentDiveRef);
-          }
-        } else {
-          console.error('User document does not exist.');
-        }
-      } else {
-        console.error('No authenticated user found.');
-      }
-    },
+    // async fetchDiveDocContent() {
+    //   const auth = getAuth();
+    //   const user = auth.currentUser;
+    //   if (user) {
+    //     const userDocRef = doc(db, 'users', user.uid);
+    //     const userDoc = await getDoc(userDocRef);
+    //     if (userDoc.exists()) {
+    //       const currentDiveRef = userDoc.data().currentDiveRef;
+    //       if (currentDiveRef && currentDiveRef instanceof Object) {
+    //         const diveDoc = await getDoc(currentDiveRef);
+    //         if (diveDoc.exists()) {
+    //           this.currentDive = diveDoc.data();
+    //           this.watchTime = diveDoc.data().watchTime || 0;
+    //           this.calculateDiveProgress();
+    //         } else {
+    //           console.error('Dive document does not exist.');
+    //         }
+    //       } else {
+    //         console.error('currentDiveRef is not a valid DocumentReference:', currentDiveRef);
+    //       }
+    //     } else {
+    //       console.error('User document does not exist.');
+    //     }
+    //   } else {
+    //     console.error('No authenticated user found.');
+    //   }
+    // },
     async fetchCurrentDive() {
       const auth = getAuth();
       const user = auth.currentUser;
@@ -242,7 +245,10 @@ export default {
         if (!confirmEnd) return;
       }
 
+      this.isLoading = true;
       await this.endDive();
+      this.isLoading = false;
+      this.$router.push('/finish');
     },
 
   async endDive() {
@@ -254,10 +260,7 @@ export default {
       // 1. Update current dive document
       await this.updateDiveVideos();
 
-      // 2. Remove selected videos from cart
-      await this.removeSelectedVideosFromCart();
-
-      // 3. Create YouTube playlist
+      // 2. Create YouTube playlist
       const playlistTitle = `Dive ${new Date().toISOString()}`;
 
       const videoIds = this.selected.map(video => video.id);
@@ -266,10 +269,10 @@ export default {
       }
       await this.createPlaylist({ playlistTitle, videoIds });
 
-      // 4. Update user document
-      await this.updateUserDocument();
+      // 3. Remove selected videos from cart
+      await this.removeSelectedVideosFromCart();
 
-      // 5. Navigate to dashboard or show completion message
+      // 4. Navigate to dashboard or show completion message
       this.$router.push('/dashboard');
     } catch (error) {
       console.error('Error ending dive:', error);
@@ -294,6 +297,7 @@ export default {
 
       const videosCollection = collection(diveRef, 'videos');
       for (const video of this.selected) {
+        
         await addDoc(videosCollection, video);
       }
 
@@ -314,15 +318,15 @@ export default {
 
       // Update local state
       this.videos = this.videos.filter(v => !this.selected.some(s => s.id === v.id));
-      // this.selected = [];
+      this.selected = [];
     },
 
-    async updateUserDocument() {
-      const userRef = doc(db, 'users', getAuth().currentUser.uid);
-      await updateDoc(userRef, {
-        currentDiveRef: null
-      });
-    },
+    // async updateUserDocument() {
+    //   const userRef = doc(db, 'users', getAuth().currentUser.uid);
+    //   await updateDoc(userRef, {
+    //     currentDiveRef: null
+    //   });
+    // },
     async checkAuth() {
       return new Promise((resolve) => {
         const auth = getAuth();
@@ -336,7 +340,6 @@ export default {
       const user = await this.checkAuth();
       if (user) {
         await this.fetchSavedVideos();
-        await this.fetchDiveDocContent();
         await this.fetchCurrentDive();
         this.initializeSelectedVideos();
         setInterval(this.calculateDiveProgress, 1000);
@@ -348,6 +351,9 @@ export default {
   },
   async created() {
     await this.initializeComponent();
+
+    await this.fetchCurrentDiveDocument();
+    console.log("fetchCurrentDIve is executed");
   },
 };
 
@@ -467,6 +473,27 @@ button:hover {
   left: 0;
   height: 100%;
   transition: width 0.5s ease-in-out;
+}
+
+.loading-spinner {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+  margin: 0 auto;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 </style>
