@@ -11,14 +11,14 @@
         <input 
           type="checkbox" 
           v-model="video.selected" 
-          @change="updateSelectedVideos(video)" 
+          @change="this.toggleVideoFromSelectedVideos(video)" 
           class="custom-checkbox"
         />
         <img :src="video.thumbnail" class="video-thumbnail" />
         <div class="video-info">
           <p>{{ video.title }}</p>
           <p class="video-duration">{{ formatDuration(video.hours, video.minutes, video.seconds) }}</p>
-          <button @click="deleteVideo(video.id)">삭제</button>
+          <button @click="deleteVideo(video)">삭제</button>
         </div>
       </div>
     </div>
@@ -48,7 +48,7 @@
 
 
 <script>
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters, mapActions, mapMutations } from 'vuex';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getDoc, doc, collection, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/scripts/firebaseApp';
@@ -66,15 +66,19 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(['getSavedVideos', 'getCurrentDiveWatchTime']),
+    ...mapGetters([
+      'getSavedVideos', 
+      'getCurrentDiveWatchTime', 
+      'getSelectedVideos',
+    ]),
     videos() {
       return this.getSavedVideos.map(video => ({
-        ...video,
-        selected: this.selected.some(v => v.id === video.id),
+        ...video
+        // selected: this.getSelectedVideos.some(v => v.id === video.id),
       }));
     },
     totalSelectedDuration() {
-      const totalSeconds = this.selected.reduce((sum, video) => 
+      const totalSeconds = this.getSelectedVideos.reduce((sum, video) => 
         sum + video.hours * 3600 + video.minutes * 60 + video.seconds, 0);
       return (totalSeconds / 3600).toFixed(2);
     },
@@ -120,28 +124,28 @@ export default {
     },
   },
   methods: {
-    ...mapActions(['fetchSavedVideos', 'deleteVideoFromDive', 'createPlaylist', 'fetchCurrentDiveDocument']),
-    async deleteVideo(videoId) {
+    ...mapActions([
+    'fetchCartVideos', 
+    'deleteVideoFromDive', 
+    'createPlaylist', 
+    'fetchCurrentDiveDocument', 
+    'setCurrentDiveDocumentAsEnd', 
+    ]),
+    ...mapMutations([
+    'toggleVideoFromSelectedVideos',
+    'clearSelectedVideos',
+    ]),
+    async deleteVideo(video) {
+      console.log("Cart.vue / methods:/ deleteVideo :: argument video is ", video);
+      console.log(video.id)
       try {
-        await this.deleteVideoFromDive(videoId);
-        this.selected = this.selected.filter(v => v.id !== videoId);
+        await this.deleteVideoFromDive(video.id);
+        this.toggleVideoFromSelectedVideos(video);
       } catch (error) {
         console.error('Error deleting video:', error);
       }
     },
-    updateSelectedVideos(video) {
-      if (video.selected) {
-        if (!this.selected.some(v => v.id === video.id)) {
-          this.selected.push(video);
-        }
-      } else {
-        this.selected = this.selected.filter(v => v.id !== video.id);
-      }
-      console.log('Selected videos:', this.selected);
-      this.selected.forEach(video => {
-        console.log(video.id);
-      });
-    },
+    
     formatDuration(hours, minutes, seconds) {
       return `${hours > 0 ? hours + ':' : ''}${minutes >= 10 ? '' : '0'}${minutes > 0 ? minutes + ':' : '0:' }${seconds}`;
     },
@@ -256,14 +260,12 @@ export default {
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) throw new Error('User not authenticated');
-
       // 1. Update current dive document
-      await this.updateDiveVideos();
-
+      await this.setCurrentDiveDocumentAsEnd();
       // 2. Create YouTube playlist
       const playlistTitle = `Dive ${new Date().toISOString()}`;
 
-      const videoIds = this.selected.map(video => video.id);
+      const videoIds = this.getSelectedVideos.map(video => video.id);
       if (videoIds.length === 0) {
         throw new Error('No videos selected for the playlist');
       }
@@ -273,7 +275,7 @@ export default {
       await this.removeSelectedVideosFromCart();
 
       // 4. Navigate to dashboard or show completion message
-      this.$router.push('/dashboard');
+      this.$router.push('/finish');
     } catch (error) {
       console.error('Error ending dive:', error);
       // Show error message to user
@@ -281,44 +283,19 @@ export default {
     }
   },  
 
-    async updateDiveVideos() {
-      const userDoc = await getDoc(doc(db, 'users', getAuth().currentUser.uid));
-      const diveRef = userDoc.data().currentDiveRef;
-      
-      if (!diveRef) {
-        throw new Error('No current dive reference found');
-      }
 
-      const diveDoc = await getDoc(diveRef);
-      
-      if (!diveDoc.exists()) {
-        throw new Error('Dive document does not exist');
-      }
-
-      const videosCollection = collection(diveRef, 'videos');
-      for (const video of this.selected) {
-        
-        await addDoc(videosCollection, video);
-      }
-
-      // Update dive status if needed
-      await updateDoc(diveRef, {
-        status: 'completed',
-        endedAt: new Date()
-      });
-    },
 
     async removeSelectedVideosFromCart() {
       const userRef = doc(db, 'users', getAuth().currentUser.uid);
       const videosCollection = collection(userRef, 'videos');
 
-      for (const video of this.selected) {
+      for (const video of this.getSelectedVideos) {
         await deleteDoc(doc(videosCollection, video.id));
       }
 
       // Update local state
-      this.videos = this.videos.filter(v => !this.selected.some(s => s.id === v.id));
-      this.selected = [];
+      this.videos = this.videos.filter(v => !this.getSelectedVideos.some(s => s.id === v.id));
+      this.clearSelectedVideos();
     },
 
     // async updateUserDocument() {
@@ -339,14 +316,14 @@ export default {
     async initializeComponent() {
       const user = await this.checkAuth();
       if (user) {
-        await this.fetchSavedVideos();
+        await this.fetchCartVideos();
         await this.fetchCurrentDive();
         this.initializeSelectedVideos();
         setInterval(this.calculateDiveProgress, 1000);
       }
     },
     initializeSelectedVideos() {
-      this.selected = this.videos.filter(video => video.selected);
+      // this.selected = this.videos.filter(video => video.selected);
     },
   },
   async created() {

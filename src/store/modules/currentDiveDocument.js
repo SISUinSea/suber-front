@@ -1,5 +1,5 @@
 import { getAuth } from 'firebase/auth';
-import { doc, getFirestore, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getFirestore, getDoc, setDoc, updateDoc, collection } from 'firebase/firestore';
 import firebaseApp from '@/scripts/firebaseApp';
 
 const db = getFirestore(firebaseApp);
@@ -36,7 +36,7 @@ const actions = {
 
         if (diveDocSnapshot.exists()) {
           const currentDiveData = diveDocSnapshot.data();
-          commit('setCurrentDive', { id: diveDocSnapshot.id, ...currentDiveData });
+          commit('setCurrentDive', { id: diveDocSnapshot.id, currentDiveRef, ...currentDiveData });
           console.log(currentDiveData);
           // console.log(state.currentDive.watchTime);
           // console.log(state.currentDive.endTime);
@@ -49,6 +49,28 @@ const actions = {
       }
     }
   },
+
+  async setCurrentDiveDocumentAsEnd({ state, rootGetters }) {
+    const selectedVideos = rootGetters['getSelectedVideos'];
+
+    console.log(selectedVideos);
+
+    if (state.currentDive && state.currentDive.currentDiveRef && selectedVideos.length > 0) {
+      const videosCollection = collection(state.currentDive.currentDiveRef, 'videos');
+      for (const video of selectedVideos) {
+        const videoDocRef = doc(videosCollection, video.id);
+        await setDoc(videoDocRef, video);
+      }
+
+      // Update dive status if needed
+      await updateDoc(state.currentDive.currentDiveRef, {
+        status: 'completed',
+        endDiveAt: new Date()
+      });
+    } else {
+      console.log('No dive reference or selected videos found');
+    }
+  },
 };
 
 const getters = {
@@ -57,6 +79,9 @@ const getters = {
   },
   getCurrentDiveWatchTime: (state) => {
     return state.currentDive ? state.currentDive.watchTime : undefined;
+  },
+  getSelectedVideosFromVideos(state, getters, rootState) {
+    return rootState.videos.getSelectedVideos;
   }
 };
 

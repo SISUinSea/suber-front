@@ -11,7 +11,8 @@ const state = () => ({
   videos: [],
   videoNextPageToken: null,
   feedbackMessages: {},
-  savedVideos: [],
+  cartVideos: [],
+  selectedVideos: [],
 });
 
 const mutations = {
@@ -30,9 +31,25 @@ const mutations = {
   removeVideo(state, videoId) {
     state.videos = state.videos.filter(video => video.id !== videoId);
   },
-  setSavedVideos(state, videos) {
-    state.savedVideos = videos;
+  setCartVideos(state, videos) {
+    state.cartVideos = videos;
   },
+  toggleVideoFromSelectedVideos(state, video) {
+    if (video.selected) {
+      if (!state.selectedVideos.some(v => v.id === video.id)) {
+        state.selectedVideos.push(video);
+      }
+    } else {
+      state.selectedVideos = state.selectedVideos.filter(v => v.id !== video.id);
+    }
+    console.log('Selected videos:', state.selectedVideos);
+    state.selectedVideos.forEach(video => {
+      console.log(video.id);
+    });
+  },
+  clearSelectedVideos(state) {
+    state.selectedVideos = [];
+  } 
 };
 
 const actions = {
@@ -114,7 +131,7 @@ const actions = {
       }
     }
   },
-  async fetchSavedVideos({ commit }) {
+  async fetchCartVideos({ commit }) {
     const auth = getAuth();
     const user = auth.currentUser;
 
@@ -137,7 +154,7 @@ const actions = {
         const querySnapshot = await getDocs(videosQuery);
         const videos = querySnapshot.docs.map(doc => doc.data());
 
-        commit('setSavedVideos', videos);
+        commit('setCartVideos', videos);
       } catch (error) {
         console.error('Error fetching saved videos:', error);
         throw error;
@@ -164,10 +181,11 @@ const actions = {
         // }
 
         const videoRef = doc(collection(userDocRef, 'videos'), videoId);
+
         await deleteDoc(videoRef);
 
-        const updatedVideos = state.savedVideos.filter(video => video.id !== videoId);
-        commit('setSavedVideos', updatedVideos);
+        const updatedVideos = state.cartVideos.filter(video => video.id !== videoId);
+        commit('setCartVideos', updatedVideos);
 
         console.log('Video deleted from dive:', videoId);
       } catch (error) {
@@ -189,8 +207,12 @@ const getters = {
     return state.feedbackMessages;
   },
   getSavedVideos(state) {
-    return state.savedVideos;
+    return state.cartVideos;
   },
+  getSelectedVideos(state) {
+    console.log("selected Videos", state.selectedVideos);
+    return state.selectedVideos;
+  }
 };
 
 export default {
