@@ -4,7 +4,7 @@
     <p>유튜브 재생목록 생성을 완료했습니다.</p>
     <p v-if="currentDive">지금부터 {{ formattedEndTime }} 까지 이 페이지로 돌아와서 종료 버튼을 눌러주세요.</p>
     <p>남은 시간: {{ remainingTime }}</p>
-    <button @click="handleFinish" :disabled="isLoading">종료</button>
+    <button @click="handleFinish" :disabled="isLoading">종료!</button>
     <div v-if="isLoading" class="loading-spinner"></div>
   </div>
 </template>
@@ -23,18 +23,22 @@ export default {
   computed: {
     ...mapGetters(['getCurrentDive', 'getCurrentDiveWatchTime']),
     currentDive() {
-      console.log('currentDive is', this.getCurrentDive);
       return this.getCurrentDive;
     },
     formattedEndTime() {
-      if (!this.currentDive || !this.currentDive.endTime) return '';
-      const end = this.currentDive.endTime.toDate();
+      if (!this.currentDive || !this.currentDive.endDiveAt || this.currentDive.watchTime == null) return '';
+
+      const end = this.currentDive.endDiveAt.toDate();
+      const watchTimeHours = this.currentDive.watchTime;
+      end.setHours(end.getHours() + watchTimeHours);
+
       const month = end.getMonth() + 1;
       const day = end.getDate();
       const hours = end.getHours();
       const minutes = end.getMinutes();
+
       return `${month}-${day} ${hours}:${minutes < 10 ? '0' : ''}${minutes}`;
-    },
+    }
   },
   methods: {
     ...mapActions(['fetchCurrentDiveDocument', 'updateCurrentDive']),
@@ -51,16 +55,20 @@ export default {
       }
     },
     updateRemainingTime() {
-      const watchTime = this.getCurrentDiveWatchTime;
-      if (watchTime === undefined) return;
+      if (!this.currentDive || !this.currentDive.endDiveAt || this.currentDive.watchTime == null) return;
+
+      const end = this.currentDive.endDiveAt.toDate();
+      const watchTimeHours = this.currentDive.watchTime;
+      end.setHours(end.getHours() + watchTimeHours);
 
       const now = new Date();
-      const remainingSeconds = Math.max(0, watchTime *  - Math.floor((now - this.currentDive.createdAt.toDate()) / 1000));
+      const remainingMilliseconds = end - now;
 
-      if (remainingSeconds <= 0) {
+      if (remainingMilliseconds <= 0) {
         this.remainingTime = '00:00:00';
         clearInterval(this.intervalId);
       } else {
+        const remainingSeconds = Math.floor(remainingMilliseconds / 1000);
         const hours = Math.floor(remainingSeconds / 3600);
         const minutes = Math.floor((remainingSeconds % 3600) / 60);
         const seconds = remainingSeconds % 60;
