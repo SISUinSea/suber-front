@@ -113,9 +113,6 @@ export default {
             createdAt: serverTimestamp(),
             endTime: endDateTime,
             watchTime: this.watchTime,
-            watchTimeAfterDive: 0,
-            videos: [],
-            finalVideos: []
           });
 
           // 사용자 문서에 currentDiveRef 업데이트
