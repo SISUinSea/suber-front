@@ -340,11 +340,11 @@ export default {
 <style scoped>
 .cart-container {
   max-width: 800px;
-  margin: 0 auto;
+  margin: 0 0;
   padding: 20px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  background-color: #f9f9f9;
+  background-color:transparent;
   text-align: center;
 }
 
@@ -352,7 +352,7 @@ export default {
   width: 100%;
   position: sticky;
   bottom: 0;
-  background-color: #f9f9f9;
+  background-color:transparent;
   z-index: 1000;
   padding: 10px 0;
 }

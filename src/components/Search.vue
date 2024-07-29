@@ -116,7 +116,7 @@ export default {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #f9f9f9;
+  background-color: transparent;
 }
 
 .channels-container-wrapper {
