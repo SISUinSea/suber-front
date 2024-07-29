@@ -26,9 +26,10 @@
       <div class="progress-bar">
         <div class="progress" :style="{ width: `${progressPercentage}%`, backgroundColor: progressColor }"></div>
       </div>
-      <p>{{ totalSelectedDuration }} / {{ getCurrentDiveWatchTime }} 시간</p>
+      
     </div>
-
+    
+    <p>{{ totalSelectedDuration }} / {{ getCurrentDiveWatchTime }} 시간</p>
     <div v-if="isLoading" class="loading-spinner"></div>
     <button
       v-else
@@ -328,9 +329,7 @@ export default {
   },
   async created() {
     await this.initializeComponent();
-
     await this.fetchCurrentDiveDocument();
-    console.log("fetchCurrentDIve is executed");
   },
 };
 
