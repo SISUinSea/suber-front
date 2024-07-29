@@ -1,25 +1,36 @@
 <template>
-  <button @click="signOutFromGoogleAccount">로그아웃</button>
-  <button @click="goToCart">저장된 영상 보기</button>
-
-  <div class="container">
-    <div class="channels-container-wrapper">
-      <div class="channels-container">
-        <div v-for="channel in channels" :key="channel.id" class="channel-card" @click="fetchChannelVideos(channel.id)">
-          <img :src="channel.thumbnail" class="channel-thumbnail" />
-          <p>{{ channel.title }}</p>
-        </div>
-        <button v-if="nextPageToken" @click="fetchChannels(nextPageToken)" class="load-more-button">&gt;</button>
-      </div>
+  <div class="search-container">
+    <div class="top-section">
+      <button @click="signOutFromGoogleAccount">로그아웃</button>
+      <button @click="goToCart">저장된 영상 보기</button>
     </div>
-    <div class="videos-container">
-      <div v-for="video in videos" :key="video.id" class="video-card" @click="saveVideo(video)">
-        <img :src="video.thumbnail" class="video-thumbnail" />
-        <p>{{ video.title }}</p>
-        <p v-if="feedbackMessages[video.id]" class="feedback-message">{{ feedbackMessages[video.id] }}</p>
-        <span class="video-duration">{{ formatDuration(video.hours, video.minutes, video.seconds) }}</span>
+
+    <div class="content-container">
+      <div class="channels-section">
+        <div class="channels-container-wrapper">
+          <div class="channels-container">
+            <div v-for="channel in channels" :key="channel.id" class="channel-card" @click="fetchChannelVideos(channel.id)">
+              <img :src="channel.thumbnail" class="channel-thumbnail" />
+              <p>{{ channel.title }}</p>
+            </div>
+            <button v-if="nextPageToken" @click="fetchChannels(nextPageToken)" class="load-more-button">&gt;</button>
+          </div>
+        </div>
       </div>
-      <button v-if="videoNextPageToken" @click="fetchMoreVideos(videoNextPageToken)" class="load-more-button">&gt;</button>
+
+      <div class="videos-section">
+        <div class="videos-container">
+          <div v-for="video in videos" :key="video.id" class="video-card" @click="saveVideo(video)">
+            <img :src="video.thumbnail" class="video-thumbnail" />
+            <div class="video-info">
+              <p class="video-title">{{ video.title }}</p>
+              <p v-if="feedbackMessages[video.id]" class="feedback-message">{{ feedbackMessages[video.id] }}</p>
+              <span class="video-duration">{{ formatDuration(video.hours, video.minutes, video.seconds) }}</span>
+            </div>
+          </div>
+          <button v-if="videoNextPageToken" @click="fetchMoreVideos(videoNextPageToken)" class="load-more-button">&gt;</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -112,62 +123,108 @@ export default {
 
 
 <style scoped>
-.container {
-  max-width: 600px;
+.search-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  max-width: 100vw;
   margin: 0 auto;
   padding: 20px;
   background-color: transparent;
+  box-sizing: border-box;
+}
+
+.top-section {
+  margin-bottom: 20px;
+}
+
+.content-container {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+  padding-right: 20px;
+}
+
+.channels-section {
+  flex-shrink: 0;
+  margin-bottom: 20px;
 }
 
 .channels-container-wrapper {
   overflow-x: auto;
+  width: 100%;
 }
 
 .channels-container {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   white-space: nowrap;
   padding: 10px 0;
 }
 
+.videos-section {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.videos-container {
+  display: flex;
+  flex-direction: column;
+}
+
 .channel-card, .video-card {
-  display: block;
   width: 100%;
+  max-width: 100%;
   margin: 10px 0;
-  text-align: center;
+  text-align: left;
   box-sizing: border-box;
   cursor: pointer;
-  position: relative; /* Add relative positioning for video duration */
+  display: flex;
+  align-items: center;
 }
 
 .channel-thumbnail {
-  width: 100px;
-  height: 100px;
+  width: 60px;
+  height: 60px;
   object-fit: cover;
-  margin: 0 auto;
+  margin-right: 10px;
+  border-radius: 50%;
 }
 
 .video-thumbnail {
-  width: 80%;
-  height: auto;
+  width: 120px;
+  height: 67.5px; /* 16:9 비율 */
   object-fit: cover;
   border-radius: 8px;
+  margin-right: 10px;
 }
 
-.channel-card p, .video-card p {
-  margin-top: 10px;
+.video-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.video-title {
+  margin: 0 0 5px 0;
   font-size: 14px;
+  font-weight: bold;
 }
 
 .feedback-message {
   color: green;
+  margin: 0;
+  font-size: 12px;
 }
 
 .load-more-button {
-  display: inline-block;
+  align-self: center;
   width: 40px;
   height: 40px;
-  margin-left: 10px;
+  margin-top: 10px;
   font-size: 20px;
   text-align: center;
   line-height: 40px;
@@ -181,16 +238,8 @@ export default {
   background-color: #bbb;
 }
 
-/* Style for video duration */
 .video-duration {
-  position: absolute;
-  bottom: 8px;
-  right: 16px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
   font-size: 12px;
+  color: #606060;
 }
 </style>
-

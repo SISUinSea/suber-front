@@ -95,8 +95,11 @@ const actions = {
         } else {
           commit('setVideos', videos);
         }
-
-        commit('setVideoNextPageToken', result.data.data.nextPageToken);
+        
+        commit('setVideoNextPageToken', result.data.nextPageToken);
+        
+        console.log("videoNEXTPageToken is", result.data.nextPageToken);
+        console.log(result.data);
         return state.videos;
       } catch (error) {
         console.error('Error fetching channel videos:', error);
