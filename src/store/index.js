@@ -6,6 +6,8 @@ import videos from './modules/videos';
 import dashboard from './modules/dashboard';
 import createPlaylist from './modules/createPlaylist';
 import currentDiveDocument from './modules/currentDiveDocument';
+import energy from './modules/energy';
+
 
 const store = createStore({
   modules: {
@@ -15,6 +17,7 @@ const store = createStore({
     dashboard,
     createPlaylist,
     currentDiveDocument,
+    energy,
   },
 });
 

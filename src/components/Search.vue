@@ -1,5 +1,7 @@
 <template>
   <div class="search-container">
+    <EnergyBar />
+
     <div class="top-section">
       <button @click="signOutFromGoogleAccount">로그아웃</button>
       <button @click="goToCart">저장된 영상 보기</button>
@@ -38,10 +40,17 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex';
+import EnergyBar from '@/components/EnergyBar.vue';
 
 export default {
   computed: {
-    ...mapGetters(['getChannels', 'getChannelNextPageToken', 'getVideos', 'getFeedbackMessages', 'getVideoNextPageToken']),
+    ...mapGetters([
+      'getChannels', 
+      'getChannelNextPageToken', 
+      'getVideos', 
+      'getFeedbackMessages', 
+      'getVideoNextPageToken',
+       ]),
     channels() {
       return this.getChannels;
     },
@@ -65,7 +74,7 @@ export default {
     };
   },
   methods: {
-    ...mapActions(['getSubscribedChannelList', 'getChannelVideos', 'saveVideoToDive', 'logOut']),
+    ...mapActions(['getSubscribedChannelList', 'getChannelVideos', 'saveVideoToDive', 'logOut', 'reduceEnergy']),
     async signOutFromGoogleAccount() {
       this.logOut();
     },
@@ -102,6 +111,7 @@ export default {
       try {
         this.loading = true;
         await this.saveVideoToDive(video);
+        this.reduceEnergy();
       } catch (error) {
         console.error('Error saving video:', error);
       } finally {
@@ -118,6 +128,9 @@ export default {
   created() {
     this.fetchChannels();
   },
+  components: {
+    EnergyBar,
+  }
 };
 </script>
 
