@@ -5,11 +5,15 @@ import firebaseApp from '@/scripts/firebaseApp';
 const functions = getFunctions(firebaseApp);
 
 const state = () => ({
+  currentChannelId: '',
   channels: [],
   channelNextPageToken: null,
 });
 
 const mutations = {
+  setCurrentChannelId(state, channelId) {
+    state.currentChannelId = channelId;
+  },
   setChannels(state, channels) {
     state.channels = channels;
   },
@@ -67,6 +71,9 @@ const getters = {
   getChannelNextPageToken(state) {
     return state.channelNextPageToken;
   },
+  getCurrentChannelId(state) {
+    return state.currentChannelId;
+  }
 };
 
 export default {

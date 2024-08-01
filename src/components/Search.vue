@@ -39,7 +39,7 @@
 
 
 <script>
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters, mapActions, mapMutations } from 'vuex';
 import EnergyBar from '@/components/EnergyBar.vue';
 
 export default {
@@ -50,6 +50,7 @@ export default {
       'getVideos', 
       'getFeedbackMessages', 
       'getVideoNextPageToken',
+      'getCurrentChannelId',
        ]),
     channels() {
       return this.getChannels;
@@ -66,20 +67,30 @@ export default {
     videoNextPageToken() {
       return this.getVideoNextPageToken;
     },
+    currentChannelId() {
+      return this.getCurrentChannelId;
+    }
   },
   data() {
     return {
       loading: false,
-      currentChannelId: null, // 현재 채널 ID를 저장하기 위한 변수 추가
     };
   },
   methods: {
-    ...mapActions(['getSubscribedChannelList', 'getChannelVideos', 'saveVideoToDive', 'logOut', 'reduceEnergy']),
+    ...mapMutations(['setCurrentChannelId']),
+    ...mapActions([
+      'getSubscribedChannelList', 
+      'getChannelVideos', 
+      'saveVideoToDive', 
+      'logOut', 
+      'reduceEnergy',
+      ]),
     async signOutFromGoogleAccount() {
       this.logOut();
     },
     async goToCart() {
       this.$router.push('/cart');
+      // this.setPage('cart');
     },
     async fetchChannels(pageToken = '') {
       try {
@@ -91,10 +102,18 @@ export default {
         this.loading = false;
       }
     },
+    async fetchMoreVideos(pageToken) {
+      // console.log("video nexdt page tokn is ", pageToken);
+      console.log("current channel id", this.currentChannelId);
+      if (this.currentChannelId) { // 현재 채널 ID가 있는지 확인
+        await this.fetchChannelVideos(this.currentChannelId, pageToken);
+      }
+    },
     async fetchChannelVideos(channelId, pageToken = '') {
       try {
         this.loading = true;
-        this.currentChannelId = channelId; // 현재 채널 ID 저장
+        console.log("loading videos from channel...");
+        this.setCurrentChannelId(channelId);
         await this.getChannelVideos({ channelId, pageToken });
       } catch (error) {
         console.error('Error fetching channel videos:', error);
@@ -102,11 +121,7 @@ export default {
         this.loading = false;
       }
     },
-    async fetchMoreVideos(pageToken) {
-      if (this.currentChannelId) { // 현재 채널 ID가 있는지 확인
-        await this.fetchChannelVideos(this.currentChannelId, pageToken);
-      }
-    },
+    
     async saveVideo(video) {
       try {
         this.loading = true;
