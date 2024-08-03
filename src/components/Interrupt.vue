@@ -39,6 +39,7 @@ export default {
     },
     resetEnergy() {
       this.resetEnergyLevel();
+      this.$router.go(-1);
     }
   },
 };
