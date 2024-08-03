@@ -26,7 +26,7 @@
       <p>날짜와 시간을 다시 선택하시려면 <a @click="previousStep" href="#" class="link">여기</a>를 클릭하세요.</p>
       
       <p>다음 문장을 입력하세요:</p>
-      <p class="target-string">"나는 {{ formattedDate }} {{ formattedTime }}부터 {{ watchTime }}시간 동안 볼 때까지 쾌락을 위한 유튜브 영상을 시청하지 않겠습니다."</p>
+      <!-- <p class="target-string">"나는 {{ formattedDate }} {{ formattedTime }}부터 {{ watchTime }}시간 동안 유튜브를 볼 때까지 쾌락을 위한 유튜브 영상을 시청하지 않겠습니다."</p> -->
       
       <div class="input-feedback">
         <span v-for="(char, index) in targetString" :key="index" :class="getCharClass(index)">
@@ -67,7 +67,7 @@ export default {
       return this.selectedTime;
     },
     targetString() {
-      return `나는 ${this.formattedDate} ${this.formattedTime}부터 ${this.watchTime}시간 동안 볼 때까지 쾌락을 위한 유튜브 영상을 시청하지 않겠습니다.`;
+      return `나는 ${this.formattedDate} ${this.formattedTime}부터 ${this.watchTime}시간 동안 유튜브를 볼 때까지 쾌락을 위해서는 유튜브를 사용하지 않겠습니다.`;
     }
   },
   methods: {
