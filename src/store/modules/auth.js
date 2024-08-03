@@ -1,8 +1,7 @@
-// src/store/modules/auth.js
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
-import {firebaseApp} from '@/scripts/firebaseApp';
+import { firebaseApp } from '@/scripts/firebaseApp';
 import router from '@/router';
 
 const db = getFirestore();
@@ -18,7 +17,7 @@ const mutations = {
 };
 
 const actions = {
-  async initAuthState({ commit }) {
+  async initAuthState({ commit, dispatch }) {
     const auth = getAuth(firebaseApp);
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -27,7 +26,7 @@ const actions = {
         // Firestore에서 user의 currentDiveDocRef 확인
         const userDocRef = doc(db, 'users', user.uid);
         const userDocSnapshot = await getDoc(userDocRef);
-        // router.push('/console');
+
         if (userDocSnapshot.exists() && userDocSnapshot.data().currentDiveRef) {
           router.push('/cart');
         } else {
@@ -39,12 +38,13 @@ const actions = {
       }
     });
   },
+
   async signInWithGoogleAndUpdateUserState({ commit }) {
     const auth = getAuth(firebaseApp);
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/youtube');
     provider.addScope('https://www.googleapis.com/auth/youtube.force-ssl');
-    
+    console.log("log in ....");
     try {
       const result = await signInWithPopup(auth, provider);
       const credential = GoogleAuthProvider.credentialFromResult(result);
@@ -54,7 +54,7 @@ const actions = {
       await setDoc(doc(db, 'users', user.uid), {
         accessToken,
         refreshToken,
-        tokenExpiry: Date.now() + 3600 * 1000,
+        tokenExpiry: Date.now() + 3590 * 1000,
       }, { merge: true });
       commit('setUser', user);
 
@@ -62,11 +62,7 @@ const actions = {
       const userDocRef = doc(db, 'users', user.uid);
       const userDocSnapshot = await getDoc(userDocRef);
       
-      if (userDocSnapshot.exists() && userDocSnapshot.data().currentDiveRef) {
-        router.push('/dashboard');
-      } else {
-        router.push('/ready');
-      }
+
     } catch (error) {
       console.error('Google login error:', error);
     }

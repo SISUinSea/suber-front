@@ -1,5 +1,3 @@
-// src/store/modules/energy.js
-
 const state = {
   energy: 10
 };
@@ -16,7 +14,7 @@ const mutations = {
 };
 
 const actions = {
-  reduceEnergy({ commit }) {
+  reduceEnergy({ state, commit }) {
     commit('REDUCE_ENERGY');
   },
   resetEnergyLevel({ commit }) {

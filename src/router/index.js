@@ -6,6 +6,8 @@ import Search from '../components/Search.vue';
 import Cart from '../components/Cart.vue';
 import DashBoard from '../components/Dashboard.vue';
 import Finish from '../components/Finish.vue';
+import Interrupt from '../components/Interrupt.vue';
+
 // Vue.use(Router);
 
 const routes = [
@@ -16,7 +18,7 @@ const routes = [
   { path: '/cart', component: Cart },
   { path: '/dashboard', component: DashBoard },
   { path: '/finish', component: Finish },
-
+  { path: '/interrupt', component: Interrupt },
 ];
 
 const router = createRouter({
