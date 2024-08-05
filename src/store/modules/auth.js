@@ -32,6 +32,10 @@ const actions = {
         } else {
           router.push('/ready');
         }
+
+        if (userDocSnapshot.exists() && !userDocSnapshot.data().consentGiven) {
+          router.push('/consent');
+        }
       } else {
         commit('setUser', null);
         router.push('/');

@@ -7,6 +7,7 @@ import Cart from '../components/Cart.vue';
 import DashBoard from '../components/Dashboard.vue';
 import Finish from '../components/Finish.vue';
 import Interrupt from '../components/Interrupt.vue';
+import Consent from '../components/Consent.vue';
 
 // Vue.use(Router);
 
@@ -19,6 +20,7 @@ const routes = [
   { path: '/dashboard', component: DashBoard },
   { path: '/finish', component: Finish },
   { path: '/interrupt', component: Interrupt },
+  { path: '/consent', component: Consent },
 ];
 
 const router = createRouter({
