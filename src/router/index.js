@@ -8,6 +8,7 @@ import DashBoard from '../components/Dashboard.vue';
 import Finish from '../components/Finish.vue';
 import Interrupt from '../components/Interrupt.vue';
 import Consent from '../components/Consent.vue';
+import Tutorial from '../components/Tutorial.vue';
 
 // Vue.use(Router);
 
@@ -21,6 +22,7 @@ const routes = [
   { path: '/finish', component: Finish },
   { path: '/interrupt', component: Interrupt },
   { path: '/consent', component: Consent },
+  { path: '/tutorial', component: Tutorial },
 ];
 
 const router = createRouter({
