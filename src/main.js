@@ -13,6 +13,8 @@ import {
   httpsCallable,
   connectFunctionsEmulator,
 } from 'firebase/functions';
+import 'swiper/swiper-bundle.css';
+
 
 
 
