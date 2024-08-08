@@ -9,6 +9,7 @@ import Finish from '../components/Finish.vue';
 import Interrupt from '../components/Interrupt.vue';
 import Consent from '../components/Consent.vue';
 import Tutorial from '../components/Tutorial.vue';
+import ScopeConsent from '../components/ScopeConsent.vue';
 
 // Vue.use(Router);
 
@@ -23,6 +24,7 @@ const routes = [
   { path: '/interrupt', component: Interrupt },
   { path: '/consent', component: Consent },
   { path: '/tutorial', component: Tutorial },
+  { path: '/scope-consent', component: ScopeConsent },
 ];
 
 const router = createRouter({
